@@ -6,19 +6,70 @@
     <title>Accessoires - PHONE&CO</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --violet: #6f42c1; --dark: #333; --light: #f4f7f6; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--light); margin: 0; }
+        :root { --violet: #6f42c1; --dark: #333; --light: #f4f7f6; --success: #28a745; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--light); margin: 0; overflow-x: hidden; }
 
-        /* Navbar */
-        nav { background: white; padding: 15px 5%; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
-        .logo { font-weight: 800; font-size: 24px; text-decoration: none; color: var(--dark); }
-        .nav-links { display: flex; gap: 20px; align-items: center; }
-        .nav-links a { text-decoration: none; color: var(--dark); font-weight: 600; font-size: 14px; text-transform: uppercase; }
-        .btn-admin { border: 2px solid var(--violet); color: var(--violet) !important; padding: 5px 12px; border-radius: 8px; }
+        /* --- NAVBAR VIOLETTE --- */
+        nav { 
+            background: var(--violet); 
+            padding: 15px 5%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000; 
+        }
+        .logo { font-weight: 800; font-size: 24px; text-decoration: none; color: white; letter-spacing: 1px; }
+        .nav-links { display: flex; gap: 25px; align-items: center; }
+        .nav-links a { 
+            text-decoration: none; 
+            color: rgba(255,255,255,0.9); 
+            font-weight: 600; 
+            font-size: 13px; 
+            text-transform: uppercase; 
+            transition: 0.3s;
+        }
+        .nav-links a:hover { color: white; }
+        
+        .btn-admin { 
+            background: white; 
+            color: var(--violet) !important; 
+            padding: 8px 18px; 
+            border-radius: 8px; 
+            font-weight: bold !important;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+
+        /* --- PANIER (Nouveau) --- */
+        .cart-trigger { 
+            background: rgba(255,255,255,0.2); 
+            color: white; 
+            padding: 8px 15px; 
+            border-radius: 20px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            position: relative;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        #cart-count { background: #ff4757; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; position: absolute; top: -5px; right: -5px; }
+
+        .cart-sidebar { position: fixed; right: -400px; top: 0; width: 350px; height: 100%; background: white; box-shadow: -5px 0 15px rgba(0,0,0,0.1); z-index: 2000; transition: 0.4s; display: flex; flex-direction: column; }
+        .cart-sidebar.active { right: 0; }
+        .cart-header { padding: 20px; background: var(--violet); color: white; display: flex; justify-content: space-between; align-items: center; }
+        .cart-items { flex-grow: 1; overflow-y: auto; padding: 20px; }
+        .cart-item { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .cart-item img { width: 50px; height: 50px; object-fit: cover; border-radius: 5px; }
+        .cart-footer { padding: 20px; border-top: 1px solid #eee; background: #fafafa; }
+        .btn-order-final { width: 100%; background: var(--success); color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-order-final:hover { background: #218838; }
 
         /* Filtres */
         .filter-bar { background: white; padding: 20px 5%; display: flex; gap: 20px; flex-wrap: wrap; border-bottom: 1px solid #eee; }
-        select { padding: 10px; border-radius: 8px; border: 1px solid #ddd; min-width: 150px; }
+        select { padding: 10px; border-radius: 8px; border: 1px solid #ddd; min-width: 150px; outline: none; }
+        select:focus { border-color: var(--violet); }
 
         /* Grille produits */
         .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
@@ -27,12 +78,13 @@
         .product-card:hover { transform: translateY(-5px); }
         .product-card img { width: 100%; height: 200px; object-fit: cover; }
         .product-info { padding: 15px; flex-grow: 1; }
-        .product-info h3 { margin: 0; font-size: 16px; color: var(--dark); }
-        .product-info .brand { font-size: 12px; color: var(--violet); font-weight: bold; text-transform: uppercase; }
-        .product-info .price { color: var(--dark); font-weight: 800; font-size: 18px; margin-top: 10px; display: block; }
-        .add-btn { width: 100%; background: var(--violet); color: white; border: none; padding: 10px; margin-top: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .product-info h3 { margin: 5px 0; font-size: 16px; color: var(--dark); }
+        .product-info .brand { font-size: 11px; color: var(--violet); font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+        .product-info .price { color: var(--dark); font-weight: 800; font-size: 20px; margin-top: 10px; display: block; }
+        .add-btn { width: 100%; background: var(--violet); color: white; border: none; padding: 12px; margin-top: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .add-btn:hover { opacity: 0.9; }
 
-        /* Style de la Modale (Pop-up) */
+        /* Modale */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 500px; }
         .modal-content h2 { margin-top: 0; color: var(--violet); }
@@ -48,12 +100,24 @@
 
     <nav>
         <a href="index.html" class="logo">PHONE&CO</a>
-        <div class="nav-links" id="nav-menu">
-            <a href="accessoires.html" style="color: var(--violet);">Accessoires</a>
-            <a href="reparation.html">Reparation</a>
-            <a href="contact.html">Contact</a>
+        <div class="nav-links" id="nav-menu"></div>
+        <div class="cart-trigger" onclick="toggleCart()">
+            🛒 Panier <span id="cart-count">0</span>
         </div>
     </nav>
+
+    <div id="cart-sidebar" class="cart-sidebar">
+        <div class="cart-header">
+            <h3>Mon Panier</h3>
+            <button onclick="toggleCart()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+        </div>
+        <div id="cart-items-list" class="cart-items">
+            </div>
+        <div class="cart-footer">
+            <h3 id="cart-total-price" style="margin-bottom:15px; color:var(--dark);">Total : 0.00 €</h3>
+            <button class="btn-order-final" onclick="checkout()">PASSER LA COMMANDE</button>
+        </div>
+    </div>
 
     <div class="filter-bar">
         <select id="filter-brand" onchange="loadProducts()">
@@ -96,9 +160,89 @@
         const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyeWZpeXVwc21kcXJhbnZ1cW14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNDU5MTcsImV4cCI6MjA4NjgyMTkxN30.JzzAt3ejHhg66unhyw9Fc_uvlvtgJ4h7Pss5TUupD3g";
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-        // --- CHARGEMENT DES FILTRES DYNAMIQUES ---
+        let cart = JSON.parse(localStorage.getItem('phoneco_cart')) || [];
+
+        // --- GESTION DU PANIER ---
+        function toggleCart() {
+            document.getElementById('cart-sidebar').classList.toggle('active');
+        }
+
+        function addToCart(pJson) {
+            const product = JSON.parse(decodeURIComponent(pJson));
+            cart.push(product);
+            localStorage.setItem('phoneco_cart', JSON.stringify(cart));
+            updateCartUI();
+            if(!document.getElementById('cart-sidebar').classList.contains('active')) toggleCart();
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            localStorage.setItem('phoneco_cart', JSON.stringify(cart));
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const list = document.getElementById('cart-items-list');
+            const count = document.getElementById('cart-count');
+            const totalDisplay = document.getElementById('cart-total-price');
+            
+            list.innerHTML = "";
+            let total = 0;
+
+            cart.forEach((item, index) => {
+                total += item.price;
+                list.innerHTML += `
+                    <div class="cart-item">
+                        <img src="${item.image_url || 'https://via.placeholder.com/50'}">
+                        <div style="flex-grow:1;">
+                            <div style="font-weight:bold; font-size:13px;">${item.name}</div>
+                            <div style="color:var(--violet); font-weight:bold;">${item.price.toFixed(2)} €</div>
+                        </div>
+                        <button onclick="removeFromCart(${index})" style="background:none; border:none; color:#ff4757; cursor:pointer; font-size:18px;">&times;</button>
+                    </div>`;
+            });
+
+            count.innerText = cart.length;
+            totalDisplay.innerText = `Total : ${total.toFixed(2)} €`;
+        }
+
+        async function checkout() {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+
+            if (!user) {
+                alert("🔒 Vous devez être connecté pour commander !");
+                window.location.href = "login.html";
+                return;
+            }
+
+            if (cart.length === 0) {
+                alert("Votre panier est vide.");
+                return;
+            }
+
+            const total = cart.reduce((sum, item) => sum + item.price, 0);
+            const details = cart.map(item => item.name).join(", ");
+
+            const { error } = await supabaseClient.from('orders').insert([{
+                user_id: user.id,
+                details: "Panier Accessoires: " + details,
+                total_price: total,
+                status: 'En attente'
+            }]);
+
+            if (error) {
+                alert("Erreur : " + error.message);
+            } else {
+                alert("✅ Commande envoyée !");
+                cart = [];
+                localStorage.removeItem('phoneco_cart');
+                updateCartUI();
+                toggleCart();
+            }
+        }
+
+        // --- TES FONCTIONS EXISTANTES (MODIFIÉES LÉGÈREMENT POUR LE PANIER) ---
         async function loadFilters() {
-            // Charger les marques
             const { data: brands } = await supabaseClient.from('product_brands').select('*');
             const brandSelect = document.getElementById('filter-brand');
             const currentBrand = brandSelect.value;
@@ -107,7 +251,6 @@
                 brandSelect.innerHTML += `<option value="${b.name}" ${currentBrand === b.name ? 'selected' : ''}>${b.name}</option>`;
             });
 
-            // Charger les catégories
             const { data: cats } = await supabaseClient.from('product_categories').select('*');
             const catSelect = document.getElementById('filter-category');
             const currentCat = catSelect.value;
@@ -121,16 +264,18 @@
             const { data: { user } } = await supabaseClient.auth.getUser();
             const isAdmin = user && user.email === "bap10official@gmail.com";
             
-            // Navbar dynamique
             const menu = document.getElementById('nav-menu');
-            const adminBtnHtml = isAdmin ? `<a href="admin.html" class="btn-admin">Console Admin</a>` : '';
-            const authBtnHtml = user ? `<a href="#" onclick="logout()">Déconnexion</a>` : `<a href="login.html">Connexion</a>`;
-            menu.innerHTML = `<a href="accessoires.html" style="color:var(--violet)">Accessoires</a><a href="reparation.html">Reparation</a><a href="contact.html">Contact</a>${adminBtnHtml}${authBtnHtml}`;
+            let navHtml = `
+                <a href="accessoires.html" style="color:white; border-bottom: 2px solid white; padding-bottom: 5px;">Accessoires</a>
+                <a href="reparation.html">Reparation</a>
+                <a href="contact.html">Contact</a>
+            `;
+            if (isAdmin) navHtml += `<a href="admin.html" class="btn-admin">Console Admin</a>`;
+            navHtml += user ? `<a href="#" onclick="logout()">Déconnexion</a>` : `<a href="login.html">Connexion</a>`;
+            menu.innerHTML = navHtml;
 
-            // On charge d'abord les filtres dynamiques
             await loadFilters();
 
-            // Récupération des valeurs des filtres
             const brand = document.getElementById('filter-brand').value;
             const category = document.getElementById('filter-category').value;
             
@@ -144,10 +289,11 @@
 
             if (products) {
                 products.forEach(p => {
+                    const pJson = encodeURIComponent(JSON.stringify(p));
                     let adminButtons = isAdmin ? `
                         <div style="margin-top:10px; display:flex; gap:5px;">
-                            <button onclick="deleteProduct(${p.id})" style="background:#d9534f; color:white; border:none; padding:8px; border-radius:5px; flex:1; cursor:pointer; font-weight:bold;">Supprimer</button>
-                            <button onclick="editProduct(${p.id})" style="background:#f0ad4e; color:white; border:none; padding:8px; border-radius:5px; flex:1; cursor:pointer; font-weight:bold;">Modifier</button>
+                            <button onclick="deleteProduct(${p.id})" style="background:#d9534f; color:white; border:none; padding:8px; border-radius:5px; flex:1; cursor:pointer; font-weight:bold; font-size:11px;">Supprimer</button>
+                            <button onclick="editProduct(${p.id})" style="background:#f0ad4e; color:white; border:none; padding:8px; border-radius:5px; flex:1; cursor:pointer; font-weight:bold; font-size:11px;">Modifier</button>
                         </div>` : "";
 
                     container.innerHTML += `
@@ -157,15 +303,16 @@
                                 <span class="brand">${p.brand}</span>
                                 <h3>${p.name}</h3>
                                 <span class="price">${p.price.toFixed(2)} €</span>
-                                <button class="add-btn" onclick="addToCart(${p.id})">Ajouter au panier</button>
+                                <button class="add-btn" onclick="addToCart('${pJson}')">Ajouter au panier</button>
                                 ${adminButtons}
                             </div>
                         </div>`;
                 });
             }
+            updateCartUI();
         }
 
-        // --- FONCTIONS ADMIN ---
+        // --- FONCTIONS ADMIN ET AUTH ---
         async function editProduct(id) {
             const { data: p } = await supabaseClient.from('products').select('*').eq('id', id).single();
             if (p) {
@@ -200,9 +347,7 @@
         }
 
         async function logout() { await supabaseClient.auth.signOut(); window.location.reload(); }
-        function addToCart(id) { alert("Ajouté au panier !"); }
 
-        // Initialisation au chargement de la page
         loadProducts();
     </script>
 </body>
