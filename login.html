@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion / Inscription - PHONE&CO</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --violet: #6f42c1; --dark: #333; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        
+        .login-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; }
+        .logo { font-size: 28px; font-weight: 800; color: var(--dark); text-decoration: none; display: block; margin-bottom: 20px; }
+        
+        h2 { margin-bottom: 20px; color: var(--dark); font-size: 1.2rem; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
+        
+        button { width: 100%; padding: 12px; background: var(--violet); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        button:hover { opacity: 0.9; transform: translateY(-2px); }
+        
+        .toggle-link { margin-top: 20px; font-size: 14px; color: var(--violet); cursor: pointer; text-decoration: underline; display: inline-block; }
+        .error-msg { color: #d9534f; font-size: 14px; margin-top: 15px; display: none; }
+        .back-link { display: block; margin-top: 20px; color: #888; text-decoration: none; font-size: 14px; }
+        
+        /* Cacher les champs d'inscription par défaut */
+        #signup-fields { display: none; transition: 0.5s; }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <a href="index.html" class="logo">PHONE&CO</a>
+        <h2 id="form-title">Connexion Client</h2>
+        
+        <form id="auth-form">
+            <div id="signup-fields">
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="first_name" placeholder="Prénom">
+                    <input type="text" id="last_name" placeholder="Nom">
+                </div>
+                <input type="text" id="phone" placeholder="Numéro de téléphone">
+                <input type="text" id="address" placeholder="Adresse complète">
+            </div>
+
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="password" id="password" placeholder="Mot de passe" required>
+            
+            <button type="submit" id="btn-auth">Se connecter</button>
+        </form>
+
+        <p class="error-msg" id="error-text"></p>
+        
+        <span class="toggle-link" id="toggle-btn" onclick="toggleForm()">Nouveau ici ? Créer un compte</span>
+        
+        <a href="index.html" class="back-link">← Retour à la boutique</a>
+    </div>
+
+    <script>
+        const SB_URL = "https://rryfiyupsmdqranvuqmx.supabase.co";
+        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyeWZpeXVwc21kcXJhbnZ1cW14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNDU5MTcsImV4cCI6MjA4NjgyMTkxN30.JzzAt3ejHhg66unhyw9Fc_uvlvtgJ4h7Pss5TUupD3g";
+        const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+
+        let isSignUp = false;
+
+        function toggleForm() {
+            isSignUp = !isSignUp;
+            const signupFields = document.getElementById('signup-fields');
+            const formTitle = document.getElementById('form-title');
+            const btnAuth = document.getElementById('btn-auth');
+            const toggleBtn = document.getElementById('toggle-btn');
+
+            if (isSignUp) {
+                signupFields.style.display = "block";
+                formTitle.innerText = "Créer un compte client";
+                btnAuth.innerText = "S'inscrire";
+                toggleBtn.innerText = "Déjà un compte ? Se connecter";
+            } else {
+                signupFields.style.display = "none";
+                formTitle.innerText = "Connexion Client";
+                btnAuth.innerText = "Se connecter";
+                toggleBtn.innerText = "Nouveau ici ? Créer un compte";
+            }
+        }
+
+        document.getElementById('auth-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorText = document.getElementById('error-text');
+            const btn = document.getElementById('btn-auth');
+
+            errorText.style.display = "none";
+            btn.innerText = "Chargement...";
+
+            if (isSignUp) {
+                // INSCRIPTION
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            first_name: document.getElementById('first_name').value,
+                            last_name: document.getElementById('last_name').value,
+                            phone: document.getElementById('phone').value,
+                            address: document.getElementById('address').value
+                        }
+                    }
+                });
+
+                if (error) {
+                    errorText.innerText = "Erreur inscription : " + error.message;
+                    errorText.style.display = "block";
+                    btn.innerText = "S'inscrire";
+                } else {
+                    alert("Compte créé ! Merci de vérifier vos emails pour confirmer.");
+                    location.reload();
+                }
+
+            } else {
+                // CONNEXION
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password,
+                });
+
+                if (error) {
+                    errorText.innerText = "Erreur connexion : " + error.message;
+                    errorText.style.display = "block";
+                    btn.innerText = "Se connecter";
+                } else {
+                    // Vérifier si c'est l'admin
+                    if (email === "bap10official@gmail.com") {
+                        window.location.href = "admin.html";
+                    } else {
+                        // Si l'utilisateur venait de la page réparation, on le renvoie là-bas
+                        const pending = localStorage.getItem('pendingOrder');
+                        if (pending) {
+                            window.location.href = "reparation.html";
+                        } else {
+                            window.location.href = "index.html";
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

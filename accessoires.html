@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accessoires - PHONE&CO</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --violet: #6f42c1; --dark: #333; --light: #f4f7f6; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--light); margin: 0; }
+
+        /* Navbar */
+        nav { background: white; padding: 15px 5%; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
+        .logo { font-weight: 800; font-size: 24px; text-decoration: none; color: var(--dark); }
+        .nav-links { display: flex; gap: 20px; align-items: center; }
+        .nav-links a { text-decoration: none; color: var(--dark); font-weight: 600; font-size: 14px; text-transform: uppercase; }
+        .btn-admin { border: 2px solid var(--violet); color: var(--violet) !important; padding: 5px 12px; border-radius: 8px; }
+
+        /* Filtres */
+        .filter-bar { background: white; padding: 20px 5%; display: flex; gap: 20px; flex-wrap: wrap; border-bottom: 1px solid #eee; }
+        select { padding: 10px; border-radius: 8px; border: 1px solid #ddd; min-width: 150px; }
+
+        /* Grille produits */
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 25px; }
+        .product-card { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: 0.3s; display: flex; flex-direction: column; }
+        .product-card:hover { transform: translateY(-5px); }
+        .product-card img { width: 100%; height: 200px; object-fit: cover; }
+        .product-info { padding: 15px; flex-grow: 1; }
+        .product-info h3 { margin: 0; font-size: 16px; color: var(--dark); }
+        .product-info .brand { font-size: 12px; color: var(--violet); font-weight: bold; text-transform: uppercase; }
+        .product-info .price { color: var(--dark); font-weight: 800; font-size: 18px; margin-top: 10px; display: block; }
+        .add-btn { width: 100%; background: var(--violet); color: white; border: none; padding: 10px; margin-top: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
+        /* Style de la Modale (Pop-up) */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 500px; }
+        .modal-content h2 { margin-top: 0; color: var(--violet); }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-save { flex: 1; background: var(--violet); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-cancel { flex: 1; background: #ccc; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html" class="logo">PHONE&CO</a>
+        <div class="nav-links" id="nav-menu">
+            <a href="accessoires.html" style="color: var(--violet);">Accessoires</a>
+            <a href="reparation.html">Reparation</a>
+            <a href="contact.html">Contact</a>
+        </div>
+    </nav>
+
+    <div class="filter-bar">
+        <select id="filter-brand" onchange="loadProducts()">
+            <option value="">Toutes les marques</option>
+        </select>
+        <select id="filter-category" onchange="loadProducts()">
+            <option value="">Toutes les catégories</option>
+        </select>
+    </div>
+
+    <main class="container">
+        <div class="product-grid" id="product-container"></div>
+    </main>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h2>Modifier le produit</h2>
+            <input type="hidden" id="edit-id">
+            <div class="form-group">
+                <label>Nom du produit</label>
+                <input type="text" id="edit-name">
+            </div>
+            <div class="form-group">
+                <label>Prix (€)</label>
+                <input type="number" step="0.01" id="edit-price">
+            </div>
+            <div class="form-group">
+                <label>URL Image</label>
+                <input type="text" id="edit-image">
+            </div>
+            <div class="modal-btns">
+                <button class="btn-save" onclick="saveEdit()">Enregistrer</button>
+                <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SB_URL = "https://rryfiyupsmdqranvuqmx.supabase.co";
+        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyeWZpeXVwc21kcXJhbnZ1cW14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNDU5MTcsImV4cCI6MjA4NjgyMTkxN30.JzzAt3ejHhg66unhyw9Fc_uvlvtgJ4h7Pss5TUupD3g";
+        const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+
+        // --- CHARGEMENT DES FILTRES DYNAMIQUES ---
+        async function loadFilters() {
+            // Charger les marques
+            const { data: brands } = await supabaseClient.from('product_brands').select('*');
+            const brandSelect = document.getElementById('filter-brand');
+            const currentBrand = brandSelect.value;
+            brandSelect.innerHTML = '<option value="">Toutes les marques</option>';
+            brands?.forEach(b => {
+                brandSelect.innerHTML += `<option value="${b.name}" ${currentBrand === b.name ? 'selected' : ''}>${b.name}</option>`;
+            });
+
+            // Charger les catégories
+            const { data: cats } = await supabaseClient.from('product_categories').select('*');
+            const catSelect = document.getElementById('filter-category');
+            const currentCat = catSelect.value;
+            catSelect.innerHTML = '<option value="">Toutes les catégories</option>';
+            cats?.forEach(c => {
+                catSelect.innerHTML += `<option value="${c.name}" ${currentCat === c.name ? 'selected' : ''}>${c.name}</option>`;
+            });
+        }
+
+        async function loadProducts() {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            const isAdmin = user && user.email === "bap10official@gmail.com";
+            
+            // Navbar dynamique
+            const menu = document.getElementById('nav-menu');
+            const adminBtnHtml = isAdmin ? `<a href="admin.html" class="btn-admin">Console Admin</a>` : '';
+            const authBtnHtml = user ? `<a href="#" onclick="logout()">Déconnexion</a>` : `<a href="login.html">Connexion</a>`;
+            menu.innerHTML = `<a href="accessoires.html" style="color:var(--violet)">Accessoires</a><a href="reparation.html">Reparation</a><a href="contact.html">Contact</a>${adminBtnHtml}${authBtnHtml}`;
+
+            // On charge d'abord les filtres dynamiques
+            await loadFilters();
+
+            // Récupération des valeurs des filtres
+            const brand = document.getElementById('filter-brand').value;
+            const category = document.getElementById('filter-category').value;
+            
+            let query = supabaseClient.from('products').select('*');
+            if (brand) query = query.eq('brand', brand);
+            if (category) query = query.eq('category', category);
+
+            const { data: products, error } = await query;
+            const container = document.getElementById('product-container');
+            container.innerHTML = error ? "<p>Erreur lors du chargement.</p>" : "";
+
+            if (products) {
+                products.forEach(p => {
+                    let adminButtons = isAdmin ? `
+                        <div style="margin-top:10px; display:flex; gap:5px;">
+                            <button onclick="deleteProduct(${p.id})" style="background:#d9534f; color:white; border:none; padding:8px; border-radius:5px; flex:1; cursor:pointer; font-weight:bold;">Supprimer</button>
+                            <button onclick="editProduct(${p.id})" style="background:#f0ad4e; color:white; border:none; padding:8px; border-radius:5px; flex:1; cursor:pointer; font-weight:bold;">Modifier</button>
+                        </div>` : "";
+
+                    container.innerHTML += `
+                        <div class="product-card" id="prod-${p.id}">
+                            <img src="${p.image_url || 'https://via.placeholder.com/200'}" alt="${p.name}">
+                            <div class="product-info">
+                                <span class="brand">${p.brand}</span>
+                                <h3>${p.name}</h3>
+                                <span class="price">${p.price.toFixed(2)} €</span>
+                                <button class="add-btn" onclick="addToCart(${p.id})">Ajouter au panier</button>
+                                ${adminButtons}
+                            </div>
+                        </div>`;
+                });
+            }
+        }
+
+        // --- FONCTIONS ADMIN ---
+        async function editProduct(id) {
+            const { data: p } = await supabaseClient.from('products').select('*').eq('id', id).single();
+            if (p) {
+                document.getElementById('edit-id').value = p.id;
+                document.getElementById('edit-name').value = p.name;
+                document.getElementById('edit-price').value = p.price;
+                document.getElementById('edit-image').value = p.image_url;
+                document.getElementById('editModal').style.display = 'flex';
+            }
+        }
+
+        function closeModal() { document.getElementById('editModal').style.display = 'none'; }
+
+        async function saveEdit() {
+            const id = document.getElementById('edit-id').value;
+            const { error } = await supabaseClient.from('products').update({
+                name: document.getElementById('edit-name').value,
+                price: parseFloat(document.getElementById('edit-price').value),
+                image_url: document.getElementById('edit-image').value
+            }).eq('id', id);
+
+            if (error) alert("Erreur : " + error.message);
+            else { closeModal(); loadProducts(); }
+        }
+
+        async function deleteProduct(id) {
+            if (confirm("⚠️ Confirmer la suppression ?")) {
+                const { error } = await supabaseClient.from('products').delete().eq('id', id);
+                if (!error) document.getElementById(`prod-${id}`).remove();
+                else alert("Erreur lors de la suppression");
+            }
+        }
+
+        async function logout() { await supabaseClient.auth.signOut(); window.location.reload(); }
+        function addToCart(id) { alert("Ajouté au panier !"); }
+
+        // Initialisation au chargement de la page
+        loadProducts();
+    </script>
+</body>
+</html>
