@@ -6,7 +6,7 @@
     <title>Dashboard Admin - PHONE&CO</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --violet: #6f42c1; --dark: #333; --bg: #f0f2f5; }
+        :root { --violet: #6f42c1; --dark: #333; --bg: #f0f2f5; --red: #dc3545; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; }
         
         .sidebar { width: 260px; background: white; height: 100vh; position: fixed; padding: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.05); overflow-y: auto; }
@@ -24,6 +24,13 @@
         .section-title { font-weight: 800; text-transform: uppercase; font-size: 11px; color: #888; margin-top: 25px; margin-bottom: 10px; display: block; border-bottom: 1px solid #eee; padding-bottom: 5px;}
         .admin-nav-item { display: block; padding: 10px; color: var(--dark); text-decoration: none; font-weight: 500; border-radius: 8px; transition: 0.2s; }
         .admin-nav-item:hover { background: #f3ebff; color: var(--violet); }
+
+        /* Styles des listes de gestion */
+        .manage-list { max-height: 150px; overflow-y: auto; border: 1px solid #eee; background: #fff; border-radius: 8px; margin-top: 10px; padding: 5px; }
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid #f5f5f5; font-size: 13px; }
+        .list-item:last-child { border-bottom: none; }
+        .btn-del { color: var(--red); cursor: pointer; font-weight: bold; font-size: 16px; border: none; background: none; width: auto; padding: 0 5px; margin: 0; }
+        .btn-del:hover { transform: scale(1.2); color: #a71d2a; }
     </style>
 </head>
 <body>
@@ -45,15 +52,22 @@
     <div id="section-filtres-boutique" class="card">
         <h2>🛠️ Paramètres de la Boutique</h2>
         <div class="form-grid">
-            <div>
-                <p class="section-title">Ajouter une Marque d'accessoire</p>
-                <input type="text" id="new-prod-brand" placeholder="Ex: Belkin, Apple...">
-                <button onclick="addFilter('product_brands', 'new-prod-brand')">Ajouter la Marque</button>
+            <div style="background: #f9f9f9; padding: 15px; border-radius: 12px;">
+                <p class="section-title">Marques d'accessoires</p>
+                <div style="display:flex; gap:5px;">
+                    <input type="text" id="new-prod-brand" placeholder="Ex: Belkin...">
+                    <button onclick="addFilter('product_brands', 'new-prod-brand')" style="width:50px; margin:0;">+</button>
+                </div>
+                <div id="list-brands" class="manage-list"></div>
             </div>
-            <div>
-                <p class="section-title">Ajouter une Catégorie</p>
-                <input type="text" id="new-prod-cat" placeholder="Ex: Audio, Coques...">
-                <button onclick="addFilter('product_categories', 'new-prod-cat')">Ajouter la Catégorie</button>
+
+            <div style="background: #f9f9f9; padding: 15px; border-radius: 12px;">
+                <p class="section-title">Catégories d'accessoires</p>
+                <div style="display:flex; gap:5px;">
+                    <input type="text" id="new-prod-cat" placeholder="Ex: Coques...">
+                    <button onclick="addFilter('product_categories', 'new-prod-cat')" style="width:50px; margin:0;">+</button>
+                </div>
+                <div id="list-cats" class="manage-list"></div>
             </div>
         </div>
     </div>
@@ -61,20 +75,12 @@
     <div id="section-accessoires" class="card">
         <h2>📦 Ajouter un Produit / Accessoire</h2>
         <div class="form-grid">
-            <input type="text" id="acc-name" placeholder="Titre du produit (ex: Coque Silicone iPhone 13)" style="grid-column: span 2;">
-            
-            <select id="acc-brand-select">
-                <option value="">Chargement des marques...</option>
-            </select>
-            
-            <select id="acc-cat-select">
-                <option value="">Chargement des catégories...</option>
-            </select>
-
+            <input type="text" id="acc-name" placeholder="Titre du produit" style="grid-column: span 2;">
+            <select id="acc-brand-select"><option value="">Chargement...</option></select>
+            <select id="acc-cat-select"><option value="">Chargement...</option></select>
             <input type="number" step="0.01" id="acc-price" placeholder="Prix (€)">
-            <input type="number" id="acc-stock" placeholder="Nombre en stock">
-            
-            <input type="text" id="acc-img" placeholder="URL de la photo du produit" style="grid-column: span 2;">
+            <input type="number" id="acc-stock" placeholder="Stock">
+            <input type="text" id="acc-img" placeholder="URL Photo" style="grid-column: span 2;">
         </div>
         <button onclick="addAccessory()" style="background:#28a745;">Enregistrer en boutique</button>
     </div>
@@ -82,12 +88,15 @@
     <div id="section-reparations" class="card">
         <h2>🔧 Configuration des Réparations</h2>
         
-        <p class="section-title">Étape 1 : Ajouter une Marque de téléphone</p>
+        <p class="section-title">Étape 1 : Gérer les Marques de téléphones</p>
         <div class="form-grid">
-            <input type="text" id="rep-brand-name" placeholder="Nom (Apple, Samsung...)">
-            <input type="text" id="rep-brand-logo" placeholder="URL du Logo">
+            <div>
+                <input type="text" id="rep-brand-name" placeholder="Nom (Apple...)">
+                <input type="text" id="rep-brand-logo" placeholder="URL Logo" style="margin-top:10px;">
+                <button onclick="addRepairBrand()">Ajouter la Marque</button>
+            </div>
+            <div id="list-repair-brands" class="manage-list" style="max-height: 200px;"></div>
         </div>
-        <button onclick="addRepairBrand()">Ajouter la Marque</button>
 
         <p class="section-title">Étape 2 : Ajouter un Modèle</p>
         <div class="form-grid">
@@ -99,7 +108,7 @@
 
         <p class="section-title">Étape 3 : Ajouter une Panne & Prix</p>
         <div class="form-grid">
-            <input type="text" id="rep-type-name" placeholder="Type (Écran LCD, Batterie...)">
+            <input type="text" id="rep-type-name" placeholder="Type (Écran LCD...)">
             <input type="number" step="0.01" id="rep-type-price" placeholder="Prix (€)">
         </div>
         <button onclick="addRepairType()">Enregistrer la Panne</button>
@@ -112,74 +121,85 @@
     const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyeWZpeXVwc21kcXJhbnZ1cW14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNDU5MTcsImV4cCI6MjA4NjgyMTkxN30.JzzAt3ejHhg66unhyw9Fc_uvlvtgJ4h7Pss5TUupD3g";
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-    // --- INITIALISATION ---
     async function init() {
         loadRepairBrands();
         loadProductFilters();
     }
 
-    // --- GESTION FILTRES BOUTIQUE ---
+    // --- FILTRES BOUTIQUE (Chargement & Affichage) ---
     async function loadProductFilters() {
-        const { data: brands } = await supabaseClient.from('product_brands').select('*');
-        const { data: cats } = await supabaseClient.from('product_categories').select('*');
+        const { data: brands } = await supabaseClient.from('product_brands').select('*').order('name');
+        const { data: cats } = await supabaseClient.from('product_categories').select('*').order('name');
 
         const bSelect = document.getElementById('acc-brand-select');
         const cSelect = document.getElementById('acc-cat-select');
+        const bList = document.getElementById('list-brands');
+        const cList = document.getElementById('list-cats');
 
+        // Update selects
         bSelect.innerHTML = '<option value="">Choisir la marque...</option>';
         brands?.forEach(b => bSelect.innerHTML += `<option value="${b.name}">${b.name}</option>`);
-
         cSelect.innerHTML = '<option value="">Choisir la catégorie...</option>';
         cats?.forEach(c => cSelect.innerHTML += `<option value="${c.name}">${c.name}</option>`);
+
+        // Update visual lists
+        bList.innerHTML = brands?.map(b => `
+            <div class="list-item">${b.name} <button class="btn-del" onclick="deleteItem('product_brands', ${b.id})">×</button></div>
+        `).join('') || '<small>Vide</small>';
+
+        cList.innerHTML = cats?.map(c => `
+            <div class="list-item">${c.name} <button class="btn-del" onclick="deleteItem('product_categories', ${c.id})">×</button></div>
+        `).join('') || '<small>Vide</small>';
     }
 
-    async function addFilter(table, inputId) {
-        const name = document.getElementById(inputId).value;
-        if(!name) return alert("Veuillez saisir un nom");
-
-        const { error } = await supabaseClient.from(table).insert([{ name }]);
-        if (error) alert("Erreur : " + error.message);
-        else {
-            alert("Ajouté !");
-            document.getElementById(inputId).value = "";
-            loadProductFilters();
-        }
-    }
-
-    // --- ACCESSOIRES ---
-    async function addAccessory() {
-        const name = document.getElementById('acc-name').value;
-        const brand = document.getElementById('acc-brand-select').value;
-        const category = document.getElementById('acc-cat-select').value;
-        const price = parseFloat(document.getElementById('acc-price').value);
-        const stock = parseInt(document.getElementById('acc-stock').value) || 0;
-        const image = document.getElementById('acc-img').value;
-
-        if(!name || !brand || !category || isNaN(price)) return alert("Remplissez tous les champs");
-
-        const { error } = await supabaseClient.from('products').insert([{
-            name, brand, price, category, stock, image_url: image
-        }]);
-
-        if (error) alert("Erreur : " + error.message);
-        else { alert("Produit enregistré !"); location.reload(); }
-    }
-
-    // --- RÉPARATIONS ---
+    // --- RÉPARATIONS (Chargement & Affichage) ---
     async function loadRepairBrands() {
-        const { data } = await supabaseClient.from('repair_brands').select('*');
+        const { data } = await supabaseClient.from('repair_brands').select('*').order('name');
         const select = document.getElementById('select-brand-for-model');
+        const list = document.getElementById('list-repair-brands');
+
         select.innerHTML = '<option value="">Choisir la marque...</option>';
         data?.forEach(b => select.innerHTML += `<option value="${b.id}">${b.name}</option>`);
+
+        list.innerHTML = data?.map(b => `
+            <div class="list-item">${b.name} <button class="btn-del" onclick="deleteItem('repair_brands', ${b.id})">×</button></div>
+        `).join('') || '<small>Aucune marque</small>';
+    }
+
+    // --- ACTIONS : AJOUTER ---
+    async function addFilter(table, inputId) {
+        const name = document.getElementById(inputId).value;
+        if(!name) return;
+        const { error } = await supabaseClient.from(table).insert([{ name }]);
+        if (!error) { document.getElementById(inputId).value = ""; loadProductFilters(); }
     }
 
     async function addRepairBrand() {
-        const { error } = await supabaseClient.from('repair_brands').insert([{ 
-            name: document.getElementById('rep-brand-name').value,
-            logo_url: document.getElementById('rep-brand-logo').value 
+        const name = document.getElementById('rep-brand-name').value;
+        const logo = document.getElementById('rep-brand-logo').value;
+        const { error } = await supabaseClient.from('repair_brands').insert([{ name, logo_url: logo }]);
+        if (!error) { document.getElementById('rep-brand-name').value = ""; loadRepairBrands(); }
+    }
+
+    // --- ACTIONS : SUPPRIMER ---
+    async function deleteItem(table, id) {
+        if (!confirm("Voulez-vous vraiment supprimer cet élément ?")) return;
+        const { error } = await supabaseClient.from(table).delete().eq('id', id);
+        if (error) alert("Erreur : impossible de supprimer (l'élément est peut-être lié à un produit/modèle)");
+        else { loadProductFilters(); loadRepairBrands(); }
+    }
+
+    // --- ACTIONS : PRODUITS & RÉPARATIONS ---
+    async function addAccessory() {
+        const { error } = await supabaseClient.from('products').insert([{
+            name: document.getElementById('acc-name').value,
+            brand: document.getElementById('acc-brand-select').value,
+            price: parseFloat(document.getElementById('acc-price').value),
+            category: document.getElementById('acc-cat-select').value,
+            stock: parseInt(document.getElementById('acc-stock').value) || 0,
+            image_url: document.getElementById('acc-img').value
         }]);
-        if (error) alert("Erreur : " + error.message);
-        else { alert("Marque de téléphone ajoutée !"); loadRepairBrands(); }
+        if (error) alert(error.message); else { alert("Produit ajouté !"); location.reload(); }
     }
 
     async function addRepairModel() {
@@ -188,8 +208,7 @@
             name: document.getElementById('rep-model-name').value,
             image_url: document.getElementById('rep-model-img').value
         }]);
-        if (error) alert("Erreur : " + error.message);
-        else alert("Modèle ajouté !");
+        if (!error) alert("Modèle ajouté !");
     }
 
     async function addRepairType() {
@@ -197,8 +216,7 @@
             name: document.getElementById('rep-type-name').value,
             price: parseFloat(document.getElementById('rep-type-price').value)
         }]);
-        if (error) alert("Erreur : " + error.message);
-        else alert("Réparation enregistrée !");
+        if (!error) alert("Panne enregistrée !");
     }
 
     init();
