@@ -155,200 +155,211 @@
         </div>
     </div>
 
-    <script>
-        const SB_URL = "https://rryfiyupsmdqranvuqmx.supabase.co";
-        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyeWZpeXVwc21kcXJhbnZ1cW14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNDU5MTcsImV4cCI6MjA4NjgyMTkxN30.JzzAt3ejHhg66unhyw9Fc_uvlvtgJ4h7Pss5TUupD3g";
-        const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+    // --- REMPLACE TOUTE LA PARTIE SCRIPT PAR CELLE-CI ---
+<script>
+    const SB_URL = "https://rryfiyupsmdqranvuqmx.supabase.co";
+    const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyeWZpeXVwc21kcXJhbnZ1cW14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNDU5MTcsImV4cCI6MjA4NjgyMTkxN30.JzzAt3ejHhg66unhyw9Fc_uvlvtgJ4h7Pss5TUupD3g";
+    const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-        let cart = JSON.parse(localStorage.getItem('phoneco_cart')) || [];
+    let cart = JSON.parse(localStorage.getItem('phoneco_cart')) || [];
 
-        // --- GESTION DU PANIER ---
-        function toggleCart() {
-            document.getElementById('cart-sidebar').classList.toggle('active');
+    // --- NOUVELLE FONCTION DE VÉRIFICATION ADMIN SÉCURISÉE ---
+    async function getAdminStatus(user) {
+        if (!user) return false;
+        const { data } = await supabaseClient
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', user.id)
+            .single();
+        return data ? data.is_admin : false;
+    }
+
+    // --- GESTION DU PANIER ---
+    function toggleCart() {
+        document.getElementById('cart-sidebar').classList.toggle('active');
+    }
+
+    function addToCart(pJson) {
+        const product = JSON.parse(decodeURIComponent(pJson));
+        cart.push(product);
+        localStorage.setItem('phoneco_cart', JSON.stringify(cart));
+        updateCartUI();
+        if(!document.getElementById('cart-sidebar').classList.contains('active')) toggleCart();
+    }
+
+    function removeFromCart(index) {
+        cart.splice(index, 1);
+        localStorage.setItem('phoneco_cart', JSON.stringify(cart));
+        updateCartUI();
+    }
+
+    function updateCartUI() {
+        const list = document.getElementById('cart-items-list');
+        const count = document.getElementById('cart-count');
+        const totalDisplay = document.getElementById('cart-total-price');
+        
+        list.innerHTML = "";
+        let total = 0;
+
+        cart.forEach((item, index) => {
+            total += item.price;
+            list.innerHTML += `
+                <div class="cart-item">
+                    <img src="${item.image_url || 'https://via.placeholder.com/50'}">
+                    <div style="flex-grow:1;">
+                        <div style="font-weight:bold; font-size:13px;">${item.name}</div>
+                        <div style="color:var(--violet); font-weight:bold;">${item.price.toFixed(2)} €</div>
+                    </div>
+                    <button onclick="removeFromCart(${index})" style="background:none; border:none; color:#ff4757; cursor:pointer; font-size:18px;">&times;</button>
+                </div>`;
+        });
+
+        count.innerText = cart.length;
+        totalDisplay.innerText = `Total : ${total.toFixed(2)} €`;
+    }
+
+    async function checkout() {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) {
+            alert("🔒 Vous devez être connecté pour commander !");
+            window.location.href = "login.html";
+            return;
         }
+        if (cart.length === 0) { alert("Votre panier est vide."); return; }
 
-        function addToCart(pJson) {
-            const product = JSON.parse(decodeURIComponent(pJson));
-            cart.push(product);
-            localStorage.setItem('phoneco_cart', JSON.stringify(cart));
+        const total = cart.reduce((sum, item) => sum + item.price, 0);
+        const details = cart.map(item => item.name).join(", ");
+
+        const { error } = await supabaseClient.from('orders').insert([{
+            user_id: user.id,
+            details: "Panier Accessoires: " + details,
+            total_price: total,
+            status: 'En attente'
+        }]);
+
+        if (error) alert("Erreur : " + error.message);
+        else {
+            alert("✅ Commande envoyée !");
+            cart = [];
+            localStorage.removeItem('phoneco_cart');
             updateCartUI();
-            if(!document.getElementById('cart-sidebar').classList.contains('active')) toggleCart();
+            toggleCart();
         }
+    }
 
-        function removeFromCart(index) {
-            cart.splice(index, 1);
-            localStorage.setItem('phoneco_cart', JSON.stringify(cart));
-            updateCartUI();
-        }
+    // --- CHARGEMENT FILTRES ---
+    async function loadFilters() {
+        const { data: brands } = await supabaseClient.from('product_brands').select('*');
+        const brandSelect = document.getElementById('filter-brand');
+        const currentBrand = brandSelect.value;
+        brandSelect.innerHTML = '<option value="">Toutes les marques</option>';
+        brands?.forEach(b => {
+            brandSelect.innerHTML += `<option value="${b.name}" ${currentBrand === b.name ? 'selected' : ''}>${b.name}</option>`;
+        });
 
-        function updateCartUI() {
-            const list = document.getElementById('cart-items-list');
-            const count = document.getElementById('cart-count');
-            const totalDisplay = document.getElementById('cart-total-price');
-            
-            list.innerHTML = "";
-            let total = 0;
+        const { data: cats } = await supabaseClient.from('product_categories').select('*');
+        const catSelect = document.getElementById('filter-category');
+        const currentCat = catSelect.value;
+        catSelect.innerHTML = '<option value="">Toutes les catégories</option>';
+        cats?.forEach(c => {
+            catSelect.innerHTML += `<option value="${c.name}" ${currentCat === c.name ? 'selected' : ''}>${c.name}</option>`;
+        });
+    }
 
-            cart.forEach((item, index) => {
-                total += item.price;
-                list.innerHTML += `
-                    <div class="cart-item">
-                        <img src="${item.image_url || 'https://via.placeholder.com/50'}">
-                        <div style="flex-grow:1;">
-                            <div style="font-weight:bold; font-size:13px;">${item.name}</div>
-                            <div style="color:var(--violet); font-weight:bold;">${item.price.toFixed(2)} €</div>
+    // --- CHARGEMENT PRODUITS AVEC VÉRIF ADMIN ---
+    async function loadProducts() {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        
+        // On vérifie le statut admin en base de données
+        const isAdmin = await getAdminStatus(user);
+        
+        const menu = document.getElementById('nav-menu');
+        let navHtml = `
+            <a href="accessoires.html" style="color:white; border-bottom: 2px solid white; padding-bottom: 5px;">Accessoires</a>
+            <a href="reparation.html">Reparation</a>
+            <a href="contact.html">Contact</a>
+        `;
+        if (isAdmin) navHtml += `<a href="admin.html" class="btn-admin">Console Admin</a>`;
+        navHtml += user ? `<a href="#" onclick="logout()">Déconnexion</a>` : `<a href="login.html">Connexion</a>`;
+        menu.innerHTML = navHtml;
+
+        await loadFilters();
+
+        const brand = document.getElementById('filter-brand').value;
+        const category = document.getElementById('filter-category').value;
+        
+        let query = supabaseClient.from('products').select('*');
+        if (brand) query = query.eq('brand', brand);
+        if (category) query = query.eq('category', category);
+
+        const { data: products, error } = await query;
+        const container = document.getElementById('product-container');
+        container.innerHTML = error ? "<p>Erreur lors du chargement.</p>" : "";
+
+        if (products) {
+            products.forEach(p => {
+                const pJson = encodeURIComponent(JSON.stringify(p));
+                // Les boutons s'affichent si isAdmin est true (peu importe l'email)
+                let adminButtons = isAdmin ? `
+                    <div style="margin-top:10px; display:flex; gap:5px;">
+                        <button onclick="deleteProduct(${p.id})" style="background:#d9534f; color:white; border:none; padding:8px; border-radius:5px; flex:1; cursor:pointer; font-weight:bold; font-size:11px;">Supprimer</button>
+                        <button onclick="editProduct(${p.id})" style="background:#f0ad4e; color:white; border:none; padding:8px; border-radius:5px; flex:1; cursor:pointer; font-weight:bold; font-size:11px;">Modifier</button>
+                    </div>` : "";
+
+                container.innerHTML += `
+                    <div class="product-card" id="prod-${p.id}">
+                        <img src="${p.image_url || 'https://via.placeholder.com/200'}" alt="${p.name}">
+                        <div class="product-info">
+                            <span class="brand">${p.brand}</span>
+                            <h3>${p.name}</h3>
+                            <span class="price">${p.price.toFixed(2)} €</span>
+                            <button class="add-btn" onclick="addToCart('${pJson}')">Ajouter au panier</button>
+                            ${adminButtons}
                         </div>
-                        <button onclick="removeFromCart(${index})" style="background:none; border:none; color:#ff4757; cursor:pointer; font-size:18px;">&times;</button>
                     </div>`;
             });
-
-            count.innerText = cart.length;
-            totalDisplay.innerText = `Total : ${total.toFixed(2)} €`;
         }
+        updateCartUI();
+    }
 
-        async function checkout() {
-            const { data: { user } } = await supabaseClient.auth.getUser();
-
-            if (!user) {
-                alert("🔒 Vous devez être connecté pour commander !");
-                window.location.href = "login.html";
-                return;
-            }
-
-            if (cart.length === 0) {
-                alert("Votre panier est vide.");
-                return;
-            }
-
-            const total = cart.reduce((sum, item) => sum + item.price, 0);
-            const details = cart.map(item => item.name).join(", ");
-
-            const { error } = await supabaseClient.from('orders').insert([{
-                user_id: user.id,
-                details: "Panier Accessoires: " + details,
-                total_price: total,
-                status: 'En attente'
-            }]);
-
-            if (error) {
-                alert("Erreur : " + error.message);
-            } else {
-                alert("✅ Commande envoyée !");
-                cart = [];
-                localStorage.removeItem('phoneco_cart');
-                updateCartUI();
-                toggleCart();
-            }
+    // --- FONCTIONS ADMIN ---
+    async function editProduct(id) {
+        const { data: p } = await supabaseClient.from('products').select('*').eq('id', id).single();
+        if (p) {
+            document.getElementById('edit-id').value = p.id;
+            document.getElementById('edit-name').value = p.name;
+            document.getElementById('edit-price').value = p.price;
+            document.getElementById('edit-image').value = p.image_url;
+            document.getElementById('editModal').style.display = 'flex';
         }
+    }
 
-        // --- TES FONCTIONS EXISTANTES (MODIFIÉES LÉGÈREMENT POUR LE PANIER) ---
-        async function loadFilters() {
-            const { data: brands } = await supabaseClient.from('product_brands').select('*');
-            const brandSelect = document.getElementById('filter-brand');
-            const currentBrand = brandSelect.value;
-            brandSelect.innerHTML = '<option value="">Toutes les marques</option>';
-            brands?.forEach(b => {
-                brandSelect.innerHTML += `<option value="${b.name}" ${currentBrand === b.name ? 'selected' : ''}>${b.name}</option>`;
-            });
+    function closeModal() { document.getElementById('editModal').style.display = 'none'; }
 
-            const { data: cats } = await supabaseClient.from('product_categories').select('*');
-            const catSelect = document.getElementById('filter-category');
-            const currentCat = catSelect.value;
-            catSelect.innerHTML = '<option value="">Toutes les catégories</option>';
-            cats?.forEach(c => {
-                catSelect.innerHTML += `<option value="${c.name}" ${currentCat === c.name ? 'selected' : ''}>${c.name}</option>`;
-            });
+    async function saveEdit() {
+        const id = document.getElementById('edit-id').value;
+        const { error } = await supabaseClient.from('products').update({
+            name: document.getElementById('edit-name').value,
+            price: parseFloat(document.getElementById('edit-price').value),
+            image_url: document.getElementById('edit-image').value
+        }).eq('id', id);
+
+        if (error) alert("Erreur : " + error.message);
+        else { closeModal(); loadProducts(); }
+    }
+
+    async function deleteProduct(id) {
+        if (confirm("⚠️ Confirmer la suppression ?")) {
+            const { error } = await supabaseClient.from('products').delete().eq('id', id);
+            if (!error) document.getElementById(`prod-${id}`).remove();
+            else alert("Erreur lors de la suppression");
         }
+    }
 
-        async function loadProducts() {
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            const isAdmin = user && user.email === "bap10official@gmail.com";
-            
-            const menu = document.getElementById('nav-menu');
-            let navHtml = `
-                <a href="accessoires.html" style="color:white; border-bottom: 2px solid white; padding-bottom: 5px;">Accessoires</a>
-                <a href="reparation.html">Reparation</a>
-                <a href="contact.html">Contact</a>
-            `;
-            if (isAdmin) navHtml += `<a href="admin.html" class="btn-admin">Console Admin</a>`;
-            navHtml += user ? `<a href="#" onclick="logout()">Déconnexion</a>` : `<a href="login.html">Connexion</a>`;
-            menu.innerHTML = navHtml;
+    async function logout() { await supabaseClient.auth.signOut(); window.location.reload(); }
 
-            await loadFilters();
-
-            const brand = document.getElementById('filter-brand').value;
-            const category = document.getElementById('filter-category').value;
-            
-            let query = supabaseClient.from('products').select('*');
-            if (brand) query = query.eq('brand', brand);
-            if (category) query = query.eq('category', category);
-
-            const { data: products, error } = await query;
-            const container = document.getElementById('product-container');
-            container.innerHTML = error ? "<p>Erreur lors du chargement.</p>" : "";
-
-            if (products) {
-                products.forEach(p => {
-                    const pJson = encodeURIComponent(JSON.stringify(p));
-                    let adminButtons = isAdmin ? `
-                        <div style="margin-top:10px; display:flex; gap:5px;">
-                            <button onclick="deleteProduct(${p.id})" style="background:#d9534f; color:white; border:none; padding:8px; border-radius:5px; flex:1; cursor:pointer; font-weight:bold; font-size:11px;">Supprimer</button>
-                            <button onclick="editProduct(${p.id})" style="background:#f0ad4e; color:white; border:none; padding:8px; border-radius:5px; flex:1; cursor:pointer; font-weight:bold; font-size:11px;">Modifier</button>
-                        </div>` : "";
-
-                    container.innerHTML += `
-                        <div class="product-card" id="prod-${p.id}">
-                            <img src="${p.image_url || 'https://via.placeholder.com/200'}" alt="${p.name}">
-                            <div class="product-info">
-                                <span class="brand">${p.brand}</span>
-                                <h3>${p.name}</h3>
-                                <span class="price">${p.price.toFixed(2)} €</span>
-                                <button class="add-btn" onclick="addToCart('${pJson}')">Ajouter au panier</button>
-                                ${adminButtons}
-                            </div>
-                        </div>`;
-                });
-            }
-            updateCartUI();
-        }
-
-        // --- FONCTIONS ADMIN ET AUTH ---
-        async function editProduct(id) {
-            const { data: p } = await supabaseClient.from('products').select('*').eq('id', id).single();
-            if (p) {
-                document.getElementById('edit-id').value = p.id;
-                document.getElementById('edit-name').value = p.name;
-                document.getElementById('edit-price').value = p.price;
-                document.getElementById('edit-image').value = p.image_url;
-                document.getElementById('editModal').style.display = 'flex';
-            }
-        }
-
-        function closeModal() { document.getElementById('editModal').style.display = 'none'; }
-
-        async function saveEdit() {
-            const id = document.getElementById('edit-id').value;
-            const { error } = await supabaseClient.from('products').update({
-                name: document.getElementById('edit-name').value,
-                price: parseFloat(document.getElementById('edit-price').value),
-                image_url: document.getElementById('edit-image').value
-            }).eq('id', id);
-
-            if (error) alert("Erreur : " + error.message);
-            else { closeModal(); loadProducts(); }
-        }
-
-        async function deleteProduct(id) {
-            if (confirm("⚠️ Confirmer la suppression ?")) {
-                const { error } = await supabaseClient.from('products').delete().eq('id', id);
-                if (!error) document.getElementById(`prod-${id}`).remove();
-                else alert("Erreur lors de la suppression");
-            }
-        }
-
-        async function logout() { await supabaseClient.auth.signOut(); window.location.reload(); }
-
-        loadProducts();
-    </script>
+    loadProducts();
+</script>
 </body>
 </html>
+
