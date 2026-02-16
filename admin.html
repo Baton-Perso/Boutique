@@ -25,117 +25,116 @@
         .admin-nav-item { display: block; padding: 10px; color: var(--dark); text-decoration: none; font-weight: 500; border-radius: 8px; transition: 0.2s; }
         .admin-nav-item:hover { background: #f3ebff; color: var(--violet); }
 
-        /* Styles des listes de gestion */
         .manage-list { max-height: 150px; overflow-y: auto; border: 1px solid #eee; background: #fff; border-radius: 8px; margin-top: 10px; padding: 5px; }
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid #f5f5f5; font-size: 13px; }
         .list-item:last-child { border-bottom: none; }
         .btn-del { color: var(--red); cursor: pointer; font-weight: bold; font-size: 16px; border: none; background: none; width: auto; padding: 0 5px; margin: 0; }
         
-        /* Table Clients */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { background: #f8f9fa; text-align: left; padding: 12px; font-size: 12px; color: #666; text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
+
+        /* Style pour masquer le contenu avant vérification admin */
+        #admin-content { display: none; }
     </style>
 </head>
 <body>
 
-<div class="sidebar">
-    <h1 style="color:var(--violet); font-size: 22px;">PHONE&CO Admin</h1>
-    <a href="index.html" class="admin-nav-item">← Voir le site</a>
-    
-    <p class="section-title">Boutique</p>
-    <a href="#section-filtres-boutique" class="admin-nav-item">• Gérer Marques/Catégories</a>
-    <a href="#section-accessoires" class="admin-nav-item">• Ajouter un Produit</a>
-    
-    <p class="section-title">Réparations</p>
-    <a href="#section-reparations" class="admin-nav-item">• Configurer les tarifs</a>
-
-    <p class="section-title">Utilisateurs</p>
-    <a href="#section-clients" class="admin-nav-item">• Liste des Clients</a>
-</div>
-
-<div class="main">
-
-    <div id="section-filtres-boutique" class="card">
-        <h2>🛠️ Paramètres de la Boutique</h2>
-        <div class="form-grid">
-            <div style="background: #f9f9f9; padding: 15px; border-radius: 12px;">
-                <p class="section-title">Marques d'accessoires</p>
-                <div style="display:flex; gap:5px;">
-                    <input type="text" id="new-prod-brand" placeholder="Ex: Belkin...">
-                    <button onclick="addFilter('product_brands', 'new-prod-brand')" style="width:50px; margin:0;">+</button>
-                </div>
-                <div id="list-brands" class="manage-list"></div>
-            </div>
-
-            <div style="background: #f9f9f9; padding: 15px; border-radius: 12px;">
-                <p class="section-title">Catégories d'accessoires</p>
-                <div style="display:flex; gap:5px;">
-                    <input type="text" id="new-prod-cat" placeholder="Ex: Coques...">
-                    <button onclick="addFilter('product_categories', 'new-prod-cat')" style="width:50px; margin:0;">+</button>
-                </div>
-                <div id="list-cats" class="manage-list"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="section-accessoires" class="card">
-        <h2>📦 Ajouter un Produit / Accessoire</h2>
-        <div class="form-grid">
-            <input type="text" id="acc-name" placeholder="Titre du produit" style="grid-column: span 2;">
-            <select id="acc-brand-select"><option value="">Chargement...</option></select>
-            <select id="acc-cat-select"><option value="">Chargement...</option></select>
-            <input type="number" step="0.01" id="acc-price" placeholder="Prix (€)">
-            <input type="number" id="acc-stock" placeholder="Stock">
-            <input type="text" id="acc-img" placeholder="URL Photo" style="grid-column: span 2;">
-        </div>
-        <button onclick="addAccessory()" style="background:var(--green);">Enregistrer en boutique</button>
-    </div>
-
-    <div id="section-reparations" class="card">
-        <h2>🔧 Configuration des Réparations</h2>
+<div id="admin-content" style="display: none; width: 100%;">
+    <div class="sidebar">
+        <h1 style="color:var(--violet); font-size: 22px;">PHONE&CO Admin</h1>
+        <a href="index.html" class="admin-nav-item">← Voir le site</a>
         
-        <p class="section-title">Étape 1 : Gérer les Marques de téléphones</p>
-        <div class="form-grid">
-            <div>
-                <input type="text" id="rep-brand-name" placeholder="Nom (Apple...)">
-                <input type="text" id="rep-brand-logo" placeholder="URL Logo" style="margin-top:10px;">
-                <button onclick="addRepairBrand()">Ajouter la Marque</button>
+        <p class="section-title">Boutique</p>
+        <a href="#section-filtres-boutique" class="admin-nav-item">• Gérer Marques/Catégories</a>
+        <a href="#section-accessoires" class="admin-nav-item">• Ajouter un Produit</a>
+        
+        <p class="section-title">Réparations</p>
+        <a href="#section-reparations" class="admin-nav-item">• Configurer les tarifs</a>
+
+        <p class="section-title">Utilisateurs</p>
+        <a href="#section-clients" class="admin-nav-item">• Liste des Clients</a>
+    </div>
+
+    <div class="main">
+        <div id="section-filtres-boutique" class="card">
+            <h2>🛠️ Paramètres de la Boutique</h2>
+            <div class="form-grid">
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 12px;">
+                    <p class="section-title">Marques d'accessoires</p>
+                    <div style="display:flex; gap:5px;">
+                        <input type="text" id="new-prod-brand" placeholder="Ex: Belkin...">
+                        <button onclick="addFilter('product_brands', 'new-prod-brand')" style="width:50px; margin:0;">+</button>
+                    </div>
+                    <div id="list-brands" class="manage-list"></div>
+                </div>
+
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 12px;">
+                    <p class="section-title">Catégories d'accessoires</p>
+                    <div style="display:flex; gap:5px;">
+                        <input type="text" id="new-prod-cat" placeholder="Ex: Coques...">
+                        <button onclick="addFilter('product_categories', 'new-prod-cat')" style="width:50px; margin:0;">+</button>
+                    </div>
+                    <div id="list-cats" class="manage-list"></div>
+                </div>
             </div>
-            <div id="list-repair-brands" class="manage-list" style="max-height: 200px;"></div>
         </div>
 
-        <p class="section-title">Étape 2 : Ajouter un Modèle</p>
-        <div class="form-grid">
-            <select id="select-brand-for-model"><option>Chargement...</option></select>
-            <input type="text" id="rep-model-name" placeholder="iPhone 14 Pro">
-            <input type="text" id="rep-model-img" placeholder="URL Photo" style="grid-column: span 2;">
+        <div id="section-accessoires" class="card">
+            <h2>📦 Ajouter un Produit / Accessoire</h2>
+            <div class="form-grid">
+                <input type="text" id="acc-name" placeholder="Titre du produit" style="grid-column: span 2;">
+                <select id="acc-brand-select"><option value="">Chargement...</option></select>
+                <select id="acc-cat-select"><option value="">Chargement...</option></select>
+                <input type="number" step="0.01" id="acc-price" placeholder="Prix (€)">
+                <input type="number" id="acc-stock" placeholder="Stock">
+                <input type="text" id="acc-img" placeholder="URL Photo" style="grid-column: span 2;">
+            </div>
+            <button onclick="addAccessory()" style="background:var(--green);">Enregistrer en boutique</button>
         </div>
-        <button onclick="addRepairModel()">Ajouter le Modèle</button>
 
-        <p class="section-title">Étape 3 : Ajouter une Panne & Prix</p>
-        <div class="form-grid">
-            <input type="text" id="rep-type-name" placeholder="Type (Écran LCD...)">
-            <input type="number" step="0.01" id="rep-type-price" placeholder="Prix (€)">
+        <div id="section-reparations" class="card">
+            <h2>🔧 Configuration des Réparations</h2>
+            <p class="section-title">Étape 1 : Gérer les Marques de téléphones</p>
+            <div class="form-grid">
+                <div>
+                    <input type="text" id="rep-brand-name" placeholder="Nom (Apple...)">
+                    <input type="text" id="rep-brand-logo" placeholder="URL Logo" style="margin-top:10px;">
+                    <button onclick="addRepairBrand()">Ajouter la Marque</button>
+                </div>
+                <div id="list-repair-brands" class="manage-list"></div>
+            </div>
+
+            <p class="section-title">Étape 2 : Ajouter un Modèle</p>
+            <div class="form-grid">
+                <select id="select-brand-for-model"><option>Chargement...</option></select>
+                <input type="text" id="rep-model-name" placeholder="iPhone 14 Pro">
+                <input type="text" id="rep-model-img" placeholder="URL Photo" style="grid-column: span 2;">
+            </div>
+            <button onclick="addRepairModel()">Ajouter le Modèle</button>
+
+            <p class="section-title">Étape 3 : Ajouter une Panne & Prix</p>
+            <div class="form-grid">
+                <input type="text" id="rep-type-name" placeholder="Type (Écran LCD...)">
+                <input type="number" step="0.01" id="rep-type-price" placeholder="Prix (€)">
+            </div>
+            <button onclick="addRepairType()">Enregistrer la Panne</button>
         </div>
-        <button onclick="addRepairType()">Enregistrer la Panne</button>
+
+        <div id="section-clients" class="card">
+            <h2>👥 Liste des Clients inscrits</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Date d'inscription</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="client-list-body"></tbody>
+            </table>
+        </div>
     </div>
-
-    <div id="section-clients" class="card">
-        <h2>👥 Liste des Clients inscrits</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Email</th>
-                    <th>Date d'inscription</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="client-list-body">
-                </tbody>
-        </table>
-    </div>
-
 </div>
 
 <script>
@@ -144,48 +143,62 @@
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
     async function init() {
-        loadRepairBrands();
-        loadProductFilters();
-        loadClients(); // Appel de la nouvelle fonction
-    }
-
-    // --- CLIENTS (Nouveau) ---
-    async function loadClients() {
-        // On récupère les profils (Assurez-vous d'avoir une table 'profiles' ou 'users_data' liée à auth.users)
-        const { data, error } = await supabaseClient
-            .from('profiles') 
-            .select('*')
-            .order('created_at', { ascending: false });
-
-        const body = document.getElementById('client-list-body');
-        if (error) {
-            body.innerHTML = `<tr><td colspan="3">Erreur lors du chargement des clients</td></tr>`;
+        // --- VÉRIFICATION SÉCURISÉE DE L'ADMIN ---
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        
+        if (!user) {
+            window.location.href = "login.html"; // Rediriger si non connecté
             return;
         }
 
+        const { data: profile, error: profileError } = await supabaseClient
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', user.id)
+            .single();
+
+        if (profileError || !profile || !profile.is_admin) {
+            alert("Accès refusé : Vous n'avez pas les droits administrateur.");
+            window.location.href = "index.html";
+            return;
+        }
+
+        // Si on arrive ici, l'utilisateur est admin
+        document.getElementById('admin-content').style.display = 'flex';
+        
+        loadRepairBrands();
+        loadProductFilters();
+        loadClients();
+    }
+
+    // --- LOGIQUE CLIENTS ---
+    async function loadClients() {
+        const { data, error } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
+        const body = document.getElementById('client-list-body');
+        if (error) return;
+
         body.innerHTML = data.map(c => `
             <tr>
-                <td><strong>${c.email}</strong></td>
+                <td><strong>${c.email}</strong> ${c.is_admin ? '<span style="color:var(--violet); font-size:10px;">[ADMIN]</span>' : ''}</td>
                 <td>${new Date(c.created_at).toLocaleDateString('fr-FR')}</td>
                 <td>
-                    <button onclick="deleteClient('${c.id}')" style="background:none; color:var(--red); width:auto; margin:0; padding:5px;">Supprimer</button>
+                    ${!c.is_admin ? `<button onclick="deleteClient('${c.id}')" style="background:none; color:var(--red); width:auto; margin:0; padding:5px;">Supprimer</button>` : ''}
                 </td>
             </tr>
         `).join('') || `<tr><td colspan="3">Aucun client trouvé.</td></tr>`;
     }
 
     async function deleteClient(id) {
-        if(confirm("Voulez-vous supprimer ce client ? Cela ne supprimera pas son compte Auth mais son profil public.")){
+        if(confirm("Supprimer ce profil client ?")){
             const { error } = await supabaseClient.from('profiles').delete().eq('id', id);
             if(!error) loadClients();
         }
     }
 
-    // --- FILTRES BOUTIQUE ---
+    // --- LOGIQUE BOUTIQUE & RÉPARATIONS (Inchangée mais intégrée) ---
     async function loadProductFilters() {
         const { data: brands } = await supabaseClient.from('product_brands').select('*').order('name');
         const { data: cats } = await supabaseClient.from('product_categories').select('*').order('name');
-
         const bSelect = document.getElementById('acc-brand-select');
         const cSelect = document.getElementById('acc-cat-select');
         const bList = document.getElementById('list-brands');
@@ -196,23 +209,19 @@
         cSelect.innerHTML = '<option value="">Choisir la catégorie...</option>';
         cats?.forEach(c => cSelect.innerHTML += `<option value="${c.name}">${c.name}</option>`);
 
-        bList.innerHTML = brands?.map(b => `<div class="list-item">${b.name} <button class="btn-del" onclick="deleteItem('product_brands', ${b.id})">×</button></div>`).join('') || '<small>Vide</small>';
-        cList.innerHTML = cats?.map(c => `<div class="list-item">${c.name} <button class="btn-del" onclick="deleteItem('product_categories', ${c.id})">×</button></div>`).join('') || '<small>Vide</small>';
+        bList.innerHTML = brands?.map(b => `<div class="list-item">${b.name} <button class="btn-del" onclick="deleteItem('product_brands', ${b.id})">×</button></div>`).join('');
+        cList.innerHTML = cats?.map(c => `<div class="list-item">${c.name} <button class="btn-del" onclick="deleteItem('product_categories', ${c.id})">×</button></div>`).join('');
     }
 
-    // --- RÉPARATIONS ---
     async function loadRepairBrands() {
         const { data } = await supabaseClient.from('repair_brands').select('*').order('name');
         const select = document.getElementById('select-brand-for-model');
         const list = document.getElementById('list-repair-brands');
-
         select.innerHTML = '<option value="">Choisir la marque...</option>';
         data?.forEach(b => select.innerHTML += `<option value="${b.id}">${b.name}</option>`);
-
-        list.innerHTML = data?.map(b => `<div class="list-item">${b.name} <button class="btn-del" onclick="deleteItem('repair_brands', ${b.id})">×</button></div>`).join('') || '<small>Aucune marque</small>';
+        list.innerHTML = data?.map(b => `<div class="list-item">${b.name} <button class="btn-del" onclick="deleteItem('repair_brands', ${b.id})">×</button></div>`).join('');
     }
 
-    // --- ACTIONS ---
     async function addFilter(table, inputId) {
         const name = document.getElementById(inputId).value;
         if(!name) return;
@@ -230,8 +239,7 @@
     async function deleteItem(table, id) {
         if (!confirm("Supprimer cet élément ?")) return;
         const { error } = await supabaseClient.from(table).delete().eq('id', id);
-        if (error) alert("Erreur : l'élément est lié à d'autres données.");
-        else { loadProductFilters(); loadRepairBrands(); }
+        if (error) alert("Erreur : Liaison existante."); else { loadProductFilters(); loadRepairBrands(); }
     }
 
     async function addAccessory() {
