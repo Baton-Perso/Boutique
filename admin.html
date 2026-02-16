@@ -6,7 +6,7 @@
     <title>Dashboard Admin - PHONE&CO</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --violet: #6f42c1; --dark: #333; --bg: #f0f2f5; --red: #dc3545; }
+        :root { --violet: #6f42c1; --dark: #333; --bg: #f0f2f5; --red: #dc3545; --green: #28a745; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; }
         
         .sidebar { width: 260px; background: white; height: 100vh; position: fixed; padding: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.05); overflow-y: auto; }
@@ -30,7 +30,11 @@
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid #f5f5f5; font-size: 13px; }
         .list-item:last-child { border-bottom: none; }
         .btn-del { color: var(--red); cursor: pointer; font-weight: bold; font-size: 16px; border: none; background: none; width: auto; padding: 0 5px; margin: 0; }
-        .btn-del:hover { transform: scale(1.2); color: #a71d2a; }
+        
+        /* Table Clients */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #f8f9fa; text-align: left; padding: 12px; font-size: 12px; color: #666; text-transform: uppercase; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -45,6 +49,9 @@
     
     <p class="section-title">Réparations</p>
     <a href="#section-reparations" class="admin-nav-item">• Configurer les tarifs</a>
+
+    <p class="section-title">Utilisateurs</p>
+    <a href="#section-clients" class="admin-nav-item">• Liste des Clients</a>
 </div>
 
 <div class="main">
@@ -82,7 +89,7 @@
             <input type="number" id="acc-stock" placeholder="Stock">
             <input type="text" id="acc-img" placeholder="URL Photo" style="grid-column: span 2;">
         </div>
-        <button onclick="addAccessory()" style="background:#28a745;">Enregistrer en boutique</button>
+        <button onclick="addAccessory()" style="background:var(--green);">Enregistrer en boutique</button>
     </div>
 
     <div id="section-reparations" class="card">
@@ -114,6 +121,21 @@
         <button onclick="addRepairType()">Enregistrer la Panne</button>
     </div>
 
+    <div id="section-clients" class="card">
+        <h2>👥 Liste des Clients inscrits</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Date d'inscription</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="client-list-body">
+                </tbody>
+        </table>
+    </div>
+
 </div>
 
 <script>
@@ -124,9 +146,42 @@
     async function init() {
         loadRepairBrands();
         loadProductFilters();
+        loadClients(); // Appel de la nouvelle fonction
     }
 
-    // --- FILTRES BOUTIQUE (Chargement & Affichage) ---
+    // --- CLIENTS (Nouveau) ---
+    async function loadClients() {
+        // On récupère les profils (Assurez-vous d'avoir une table 'profiles' ou 'users_data' liée à auth.users)
+        const { data, error } = await supabaseClient
+            .from('profiles') 
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        const body = document.getElementById('client-list-body');
+        if (error) {
+            body.innerHTML = `<tr><td colspan="3">Erreur lors du chargement des clients</td></tr>`;
+            return;
+        }
+
+        body.innerHTML = data.map(c => `
+            <tr>
+                <td><strong>${c.email}</strong></td>
+                <td>${new Date(c.created_at).toLocaleDateString('fr-FR')}</td>
+                <td>
+                    <button onclick="deleteClient('${c.id}')" style="background:none; color:var(--red); width:auto; margin:0; padding:5px;">Supprimer</button>
+                </td>
+            </tr>
+        `).join('') || `<tr><td colspan="3">Aucun client trouvé.</td></tr>`;
+    }
+
+    async function deleteClient(id) {
+        if(confirm("Voulez-vous supprimer ce client ? Cela ne supprimera pas son compte Auth mais son profil public.")){
+            const { error } = await supabaseClient.from('profiles').delete().eq('id', id);
+            if(!error) loadClients();
+        }
+    }
+
+    // --- FILTRES BOUTIQUE ---
     async function loadProductFilters() {
         const { data: brands } = await supabaseClient.from('product_brands').select('*').order('name');
         const { data: cats } = await supabaseClient.from('product_categories').select('*').order('name');
@@ -136,23 +191,16 @@
         const bList = document.getElementById('list-brands');
         const cList = document.getElementById('list-cats');
 
-        // Update selects
         bSelect.innerHTML = '<option value="">Choisir la marque...</option>';
         brands?.forEach(b => bSelect.innerHTML += `<option value="${b.name}">${b.name}</option>`);
         cSelect.innerHTML = '<option value="">Choisir la catégorie...</option>';
         cats?.forEach(c => cSelect.innerHTML += `<option value="${c.name}">${c.name}</option>`);
 
-        // Update visual lists
-        bList.innerHTML = brands?.map(b => `
-            <div class="list-item">${b.name} <button class="btn-del" onclick="deleteItem('product_brands', ${b.id})">×</button></div>
-        `).join('') || '<small>Vide</small>';
-
-        cList.innerHTML = cats?.map(c => `
-            <div class="list-item">${c.name} <button class="btn-del" onclick="deleteItem('product_categories', ${c.id})">×</button></div>
-        `).join('') || '<small>Vide</small>';
+        bList.innerHTML = brands?.map(b => `<div class="list-item">${b.name} <button class="btn-del" onclick="deleteItem('product_brands', ${b.id})">×</button></div>`).join('') || '<small>Vide</small>';
+        cList.innerHTML = cats?.map(c => `<div class="list-item">${c.name} <button class="btn-del" onclick="deleteItem('product_categories', ${c.id})">×</button></div>`).join('') || '<small>Vide</small>';
     }
 
-    // --- RÉPARATIONS (Chargement & Affichage) ---
+    // --- RÉPARATIONS ---
     async function loadRepairBrands() {
         const { data } = await supabaseClient.from('repair_brands').select('*').order('name');
         const select = document.getElementById('select-brand-for-model');
@@ -161,12 +209,10 @@
         select.innerHTML = '<option value="">Choisir la marque...</option>';
         data?.forEach(b => select.innerHTML += `<option value="${b.id}">${b.name}</option>`);
 
-        list.innerHTML = data?.map(b => `
-            <div class="list-item">${b.name} <button class="btn-del" onclick="deleteItem('repair_brands', ${b.id})">×</button></div>
-        `).join('') || '<small>Aucune marque</small>';
+        list.innerHTML = data?.map(b => `<div class="list-item">${b.name} <button class="btn-del" onclick="deleteItem('repair_brands', ${b.id})">×</button></div>`).join('') || '<small>Aucune marque</small>';
     }
 
-    // --- ACTIONS : AJOUTER ---
+    // --- ACTIONS ---
     async function addFilter(table, inputId) {
         const name = document.getElementById(inputId).value;
         if(!name) return;
@@ -181,15 +227,13 @@
         if (!error) { document.getElementById('rep-brand-name').value = ""; loadRepairBrands(); }
     }
 
-    // --- ACTIONS : SUPPRIMER ---
     async function deleteItem(table, id) {
-        if (!confirm("Voulez-vous vraiment supprimer cet élément ?")) return;
+        if (!confirm("Supprimer cet élément ?")) return;
         const { error } = await supabaseClient.from(table).delete().eq('id', id);
-        if (error) alert("Erreur : impossible de supprimer (l'élément est peut-être lié à un produit/modèle)");
+        if (error) alert("Erreur : l'élément est lié à d'autres données.");
         else { loadProductFilters(); loadRepairBrands(); }
     }
 
-    // --- ACTIONS : PRODUITS & RÉPARATIONS ---
     async function addAccessory() {
         const { error } = await supabaseClient.from('products').insert([{
             name: document.getElementById('acc-name').value,
@@ -199,7 +243,7 @@
             stock: parseInt(document.getElementById('acc-stock').value) || 0,
             image_url: document.getElementById('acc-img').value
         }]);
-        if (error) alert(error.message); else { alert("Produit ajouté !"); location.reload(); }
+        if (error) alert(error.message); else { alert("Produit ajouté !"); loadProductFilters(); }
     }
 
     async function addRepairModel() {
