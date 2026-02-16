@@ -9,18 +9,57 @@
         :root { --violet: #6f42c1; --dark: #333; --light: #f8f9fa; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--light); color: var(--dark); }
         
-        /* Navbar */
-        nav { background: white; padding: 15px 5%; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
-        .logo { font-weight: 800; font-size: 24px; text-decoration: none; color: var(--dark); }
-        .nav-links { display: flex; gap: 20px; align-items: center; }
-        .nav-links a { text-decoration: none; color: var(--dark); font-weight: 600; font-size: 14px; text-transform: uppercase; }
-        .btn-admin { border: 2px solid var(--violet); color: var(--violet) !important; padding: 5px 15px; border-radius: 8px; }
+        /* Navbar Violette */
+        nav { 
+            background: var(--violet); 
+            padding: 15px 5%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000; 
+        }
+        .logo { font-weight: 800; font-size: 24px; text-decoration: none; color: white; letter-spacing: 1px; }
+        .nav-links { display: flex; gap: 25px; align-items: center; }
+        .nav-links a { 
+            text-decoration: none; 
+            color: rgba(255,255,255,0.9); 
+            font-weight: 600; 
+            font-size: 13px; 
+            text-transform: uppercase; 
+            transition: 0.3s;
+        }
+        .nav-links a:hover { color: white; }
+        
+        /* Bouton Admin Spécifique */
+        .btn-admin { 
+            background: white; 
+            color: var(--violet) !important; 
+            padding: 8px 18px; 
+            border-radius: 8px; 
+            font-weight: bold !important;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
 
-        /* Hero Section */
-        .hero { height: 400px; background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://rryfiyupsmdqranvuqmx.supabase.co/storage/v1/object/public/assets/fond.jpg'); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; color: white; text-align: center; }
-        .hero h1 { font-size: 3rem; margin: 0; }
+        /* Hero Section avec ton image locale fond.jpg */
+        .hero { 
+            height: 500px; 
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('fond.jpg'); 
+            background-size: cover; 
+            background-position: center; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: white; 
+            text-align: center; 
+        }
+        .hero h1 { font-size: 3.5rem; margin: 0; text-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
+        .hero p { font-size: 1.2rem; opacity: 0.9; margin-top: 10px; }
 
-        /* Grille Produits (Objets Stars) */
+        /* Grille Produits */
         .container { max-width: 1200px; margin: 50px auto; padding: 0 20px; }
         h2 { border-left: 5px solid var(--violet); padding-left: 15px; margin-bottom: 30px; }
         .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 25px; }
@@ -29,9 +68,41 @@
         .product-card:hover { transform: translateY(-5px); }
         .product-card img { width: 100%; height: 200px; object-fit: cover; }
         .product-info { padding: 15px; }
-        .product-info h3 { margin: 0; font-size: 16px; }
+        .product-info h3 { margin: 0; font-size: 16px; color: var(--dark); }
         .product-info .price { color: var(--violet); font-weight: bold; font-size: 18px; margin-top: 10px; display: block; }
-        .badge { position: absolute; top: 10px; right: 10px; background: var(--violet); color: white; padding: 5px 10px; border-radius: 20px; font-size: 10px; font-weight: bold; }
+
+        /* Section Boutique */
+        .shop-section { 
+            background: white; 
+            padding: 60px 40px; 
+            margin-top: 50px; 
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.03);
+        }
+        .shop-flex { display: flex; align-items: center; gap: 40px; flex-wrap: wrap; }
+        .shop-text { flex: 1.2; min-width: 300px; }
+        .shop-image-container { 
+            flex: 0.8; 
+            min-width: 300px; 
+            height: 400px; 
+            border-radius: 20px; 
+            overflow: hidden; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .shop-image-container img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .btn-contact { 
+            display: inline-block; 
+            margin-top: 20px; 
+            padding: 15px 30px; 
+            background: var(--violet); 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 10px; 
+            font-weight: bold; 
+            transition: 0.3s;
+        }
+        .btn-contact:hover { opacity: 0.9; transform: scale(1.05); }
     </style>
 </head>
 <body>
@@ -39,16 +110,13 @@
     <nav>
         <a href="index.html" class="logo">PHONE&CO</a>
         <div class="nav-links" id="nav-menu">
-            <a href="accessoires.html">Accessoires</a>
-            <a href="reparation.html">Reparation</a>
-            <a href="contact.html">Contact</a>
             </div>
     </nav>
 
     <header class="hero">
         <div>
             <h1>Réparation & Accessoires</h1>
-            <p>6 Rue d'Hesdin, Saint-Pol-sur-Ternoise</p>
+            <p>📍 6 Rue d'Hesdin, Saint-Pol-sur-Ternoise</p>
         </div>
     </header>
 
@@ -57,71 +125,71 @@
         <div class="product-grid" id="stars-container">
             <p>Chargement des produits...</p>
         </div>
+
+        <section class="shop-section">
+            <div class="shop-flex">
+                <div class="shop-text">
+                    <h2 style="border:none; padding:0;">Votre expert local à <span style="color:var(--violet)">Saint-Pol</span></h2>
+                    <p>Venez découvrir notre large gamme d'accessoires en magasin. Nous proposons également un service de réparation rapide et garanti pour tous vos smartphones.</p>
+                    <ul style="list-style: none; padding: 0; margin: 20px 0; line-height: 2.5;">
+                        <li>✅ Réparations toutes marques</li>
+                        <li>✅ Devis gratuit immédiat</li>
+                        <li>✅ Accessoires certifiés</li>
+                    </ul>
+                    <a href="contact.html" class="btn-contact">Prendre rendez-vous</a>
+                </div>
+                <div class="shop-image-container">
+                    <img src="https://lh3.googleusercontent.com/p/AF1QipO6ycLG_Xnj1e1ATqXwqMQpVvW7hluemMf-w4Tj=s680-w680-h510-rw" alt="Boutique PHONE&CO">
+                </div>
+            </div>
+        </section>
     </main>
 
     <script>
-        // 1. CONFIGURATION SUPABASE
         const SB_URL = "https://rryfiyupsmdqranvuqmx.supabase.co";
         const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyeWZpeXVwc21kcXJhbnZ1cW14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNDU5MTcsImV4cCI6MjA4NjgyMTkxN30.JzzAt3ejHhg66unhyw9Fc_uvlvtgJ4h7Pss5TUupD3g";
         const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-        // 2. GESTION DE LA NAVBAR (User vs Admin)
         async function checkUser() {
             const { data: { user } } = await supabaseClient.auth.getUser();
             const menu = document.getElementById('nav-menu');
             
-            // On vide pour reconstruire proprement
-            menu.innerHTML = `
+            let html = `
                 <a href="accessoires.html">Accessoires</a>
                 <a href="reparation.html">Reparation</a>
                 <a href="contact.html">Contact</a>
             `;
             
             if (user) {
-                // SI C'EST TOI (L'ADMIN)
                 if (user.email === "bap10official@gmail.com") {
-                    menu.innerHTML += `<a href="admin.html" class="btn-admin" style="color:#6f42c1; border:2px solid #6f42c1; padding:5px 10px; border-radius:8px;">Console Admin</a>`;
+                    html += `<a href="admin.html" class="btn-admin">Console Admin</a>`;
                 }
-                menu.innerHTML += `<a href="#" onclick="logout()">Déconnexion</a>`;
+                html += `<a href="#" onclick="logout()">Déconnexion</a>`;
             } else {
-                menu.innerHTML += `<a href="login.html">Connexion</a>`;
+                html += `<a href="login.html">Connexion</a>`;
             }
+            menu.innerHTML = html;
         }
 
-        // 3. CHARGEMENT DES PRODUITS STARS
         async function loadStars() {
-            const { data: products, error } = await supabaseClient
-                .from('products')
-                .select('*')
-                .limit(5); // On prend les 5 premiers
-
+            const { data: products, error } = await supabaseClient.from('products').select('*').limit(4);
             const container = document.getElementById('stars-container');
-            if (error) {
-                container.innerHTML = "Erreur de chargement des produits.";
-                return;
-            }
-
-            container.innerHTML = ''; // On vide le message de chargement
+            if (error) { container.innerHTML = "Erreur de chargement."; return; }
+            container.innerHTML = '';
             products.forEach(p => {
                 container.innerHTML += `
                     <div class="product-card">
-                        <span class="badge">STAR</span>
                         <img src="${p.image_url || 'https://via.placeholder.com/200'}" alt="${p.name}">
                         <div class="product-info">
                             <h3>${p.brand} - ${p.name}</h3>
                             <span class="price">${p.price.toFixed(2)} €</span>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
         }
 
-        async function logout() {
-            await supabaseClient.auth.signOut();
-            window.location.reload();
-        }
+        async function logout() { await supabaseClient.auth.signOut(); window.location.reload(); }
 
-        // Initialisation
         checkUser();
         loadStars();
     </script>
