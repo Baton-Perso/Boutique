@@ -117,13 +117,13 @@
     let totalPrice = 0;
 
     async function init() {
-        const { data: brands, error } = await supabaseClient.from('repair_brands').select('*');
+        const { data: brands } = await supabaseClient.from('repair_brands').select('*').order('name');
         const grid = document.getElementById('brands-grid');
         grid.innerHTML = ""; 
         if (brands) {
             brands.forEach(b => {
                 grid.innerHTML += `
-                    <div class="option-card" onclick="selectBrand(${b.id}, '${b.name}')">
+                    <div class="option-card" id="brand-${b.id}" onclick="selectBrand(${b.id}, '${b.name}')">
                         <img src="${b.logo_url || 'https://via.placeholder.com/60?text=' + b.name}">
                         <br><span>${b.name}</span>
                     </div>`;
@@ -131,46 +131,133 @@
         }
     }
 
-    // Cette fonction doit être appelée quand on clique sur une marque
-function selectBrand(brandId, brandName) {
-    selectedBrand = brandId;
-    
-    // 1. On réinitialise les sélections suivantes
-    selectedModel = null; 
-    selectedRepairs = [];
-    
-    // 2. On met à jour l'affichage du devis
-    updateQuoteDisplay(); 
-    
-    // 3. On vide la zone des modèles et des pannes visuellement
-    document.getElementById('models-grid').innerHTML = '<p>Chargement des modèles...</p>';
-    document.getElementById('repairs-grid').innerHTML = '';
-    
-    // 4. On charge les nouveaux modèles
-    loadModels(brandId);
-}
-
-    async function selectModel(name) {
-        selectedModel = name;
-        document.getElementById('res-model').innerText = name;
-        document.getElementById('title-repairs').style.display = 'block';
+    // FONCTION CORRIGÉE : Gère le clic sur la marque et nettoie tout
+    async function selectBrand(brandId, brandName) {
+        selectedBrand = brandName; // On stocke le nom pour le devis
         
-        const { data: repairs } = await supabaseClient.from('repair_types').select('*');
-        const grid = document.getElementById('repairs-grid');
+        // 1. Réinitialisation totale des variables
+        selectedModel = "";
+        selectedRepairs = [];
+        totalPrice = 0;
+
+        // 2. Mise à jour visuelle immédiate du résumé (Devis Express)
+        document.getElementById('res-brand').innerText = brandName;
+        document.getElementById('res-model').innerText = "-";
+        document.getElementById('res-repair').innerText = "-";
+        document.getElementById('res-total').innerText = "0.00";
+        
+        // Désactiver les boutons car on a changé de marque
+        document.getElementById('order-btn').disabled = true;
+        document.getElementById('pdf-btn').disabled = true;
+
+        // 3. Gestion visuelle des grilles
+        document.getElementById('title-models').style.display = 'block';
+        document.getElementById('models-grid').innerHTML = '<p>Chargement des modèles...</p>';
+        document.getElementById('title-repairs').style.display = 'none';
+        document.getElementById('repairs-grid').innerHTML = '';
+
+        // Gérer la classe "active" sur les logos de marque
+        document.querySelectorAll('#brands-grid .option-card').forEach(el => el.classList.remove('active'));
+        const activeCard = document.querySelector(`[onclick*="selectBrand(${brandId}"]`);
+        if(activeCard) activeCard.classList.add('active');
+
+        // 4. Charger les modèles de cette marque
+        loadModels(brandId);
+    }
+
+    // LA FONCTION QUI MANQUAIT
+    async function loadModels(brandId) {
+        const { data: models } = await supabaseClient
+            .from('repair_models')
+            .select('*')
+            .eq('brand_id', brandId)
+            .order('name');
+
+        const grid = document.getElementById('models-grid');
         grid.innerHTML = "";
-        repairs.forEach(r => {
-            grid.innerHTML += `
-                <div class="option-card" id="rep-${r.id}" onclick="toggleRepair('${r.name}', ${r.price}, ${r.id})">
-                    <span>${r.name}</span>
-                    <br><strong style="color:var(--violet)">${r.price.toFixed(2)} €</strong>
-                </div>`;
-        });
+        
+        if (models && models.length > 0) {
+            models.forEach(m => {
+                grid.innerHTML += `
+                    <div class="option-card" onclick="selectModel('${m.name}', ${m.id})">
+                        <img src="${m.image_url || 'https://via.placeholder.com/60?text=' + m.name}">
+                        <br><span>${m.name}</span>
+                    </div>`;
+            });
+        } else {
+            grid.innerHTML = "<p>Aucun modèle disponible pour cette marque.</p>";
+        }
+    }
+
+    async function selectModel(modelName, modelId) {
+        selectedModel = modelName;
+        
+        // Mise à jour du résumé
+        document.getElementById('res-model').innerText = modelName;
+        
+        // Reset des réparations si on change de modèle
+        selectedRepairs = [];
+        totalPrice = 0;
+        document.getElementById('res-repair').innerText = "-";
+        document.getElementById('res-total').innerText = "0.00";
+
+        // Affichage de la grille des pannes
+        document.getElementById('title-repairs').style.display = 'block';
+        const grid = document.getElementById('repairs-grid');
+        grid.innerHTML = "<p>Chargement des tarifs...</p>";
+
+        // Gérer la classe active sur les modèles
+        document.querySelectorAll('#models-grid .option-card').forEach(el => el.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+
+        // Charger les pannes liées à ce modèle précis (model_id)
+        const { data: repairs } = await supabaseClient
+            .from('repair_types')
+            .select('*')
+            .eq('model_id', modelId);
+
+        grid.innerHTML = "";
+        if (repairs && repairs.length > 0) {
+            repairs.forEach(r => {
+                grid.innerHTML += `
+                    <div class="option-card" id="rep-${r.id}" onclick="toggleRepair('${r.name}', ${r.price}, ${r.id})">
+                        <span>${r.name}</span>
+                        <br><strong style="color:var(--violet)">${r.price.toFixed(2)} €</strong>
+                    </div>`;
+            });
+        } else {
+            grid.innerHTML = "<p>Aucun tarif disponible pour ce modèle.</p>";
+        }
+        
         document.getElementById('title-repairs').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function toggleRepair(name, price, id) {
+        const index = selectedRepairs.findIndex(item => item.name === name);
+        const element = document.getElementById(`rep-${id}`);
+
+        if (index > -1) {
+            selectedRepairs.splice(index, 1);
+            totalPrice -= price;
+            element.classList.remove('active');
+        } else {
+            selectedRepairs.push({ name, price });
+            totalPrice += price;
+            element.classList.add('active');
+        }
+
+        // Mise à jour du résumé
+        document.getElementById('res-repair').innerText = selectedRepairs.map(r => r.name).join(", ") || "-";
+        document.getElementById('res-total').innerText = totalPrice.toFixed(2);
+        
+        // Activer/Désactiver boutons
+        const hasRepairs = selectedRepairs.length > 0;
+        document.getElementById('pdf-btn').disabled = !hasRepairs;
+        document.getElementById('order-btn').disabled = !hasRepairs;
     }
 
     async function handleOrder() {
         const { data: { user } } = await supabaseClient.auth.getUser();
-
         if (!user) {
             alert("Veuillez vous connecter pour valider votre commande.");
             window.location.href = "login.html";
@@ -199,45 +286,8 @@ function selectBrand(brandId, brandName) {
         } else {
             alert("✅ Commande enregistrée !");
             window.location.href = `mailto:bap10official@gmail.com?subject=Commande ${selectedBrand}&body=Recap: ${selectedModel} - ${totalPrice}€`;
-            setTimeout(() => { window.location.href = "index.html"; }, 1000);
         }
     }
-
-    function toggleRepair(name, price, id) {
-        const index = selectedRepairs.findIndex(item => item.name === name);
-        const element = document.getElementById(`rep-${id}`);
-
-        if (index > -1) {
-            selectedRepairs.splice(index, 1);
-            totalPrice -= price;
-            element.classList.remove('active');
-        } else {
-            selectedRepairs.push({ name, price });
-            totalPrice += price;
-            element.classList.add('active');
-        }
-
-        document.getElementById('res-repair').innerText = selectedRepairs.map(r => r.name).join(", ") || "-";
-        document.getElementById('res-total').innerText = totalPrice.toFixed(2);
-        
-        const ok = selectedRepairs.length > 0;
-        document.getElementById('pdf-btn').disabled = !ok;
-        document.getElementById('order-btn').disabled = !ok;
-    }
-
-    function updateQuoteDisplay() {
-    const modelText = document.getElementById('quote-model');
-    const totalText = document.getElementById('quote-total');
-    
-    // Si aucun modèle n'est sélectionné, on affiche un tiret
-    if (!selectedModel) {
-        modelText.innerText = "-";
-    }
-    
-    // Calcul du total (ton code actuel doit déjà le faire)
-    let total = selectedRepairs.reduce((sum, r) => sum + r.price, 0);
-    totalText.innerText = total.toFixed(2) + " €";
-}
 
     function generatePDF() {
         const { jsPDF } = window.jspdf;
@@ -257,7 +307,7 @@ function selectBrand(brandId, brandName) {
             doc.text(`${r.price.toFixed(2)} €`, 170, y, { align: 'right' });
             y += 10;
         });
-        doc.setFont(undefined, 'bold');
+        doc.setFont("helvetica", "bold");
         doc.text(`TOTAL TTC : ${totalPrice.toFixed(2)} €`, 20, y + 10);
         doc.save(`Devis_${selectedModel}.pdf`);
     }
@@ -266,4 +316,5 @@ function selectBrand(brandId, brandName) {
 </script>
 </body>
 </html>
+
 
