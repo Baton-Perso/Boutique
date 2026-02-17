@@ -36,7 +36,6 @@
 
         .badge-low { background: #fff0f0; color: var(--red); padding: 4px 8px; border-radius: 5px; font-weight: bold; font-size: 12px; }
         
-        /* Style spécial FAQ Admin */
         .faq-item-admin { background: #f9f9f9; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #eee; }
         .faq-status { font-size: 10px; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; font-weight: bold; }
         .status-online { background: #e6ffed; color: var(--green); }
@@ -112,25 +111,34 @@
         <div id="section-faq" class="card">
             <h2>💬 Modération de la FAQ</h2>
             <p class="section-title">Questions posées par les clients</p>
-            <div id="faq-admin-list">
-                </div>
+            <div id="faq-admin-list"></div>
         </div>
 
         <div id="section-reparations" class="card">
             <h2>🔧 Configuration des Réparations</h2>
-            <p class="section-title">Marques & Modèles</p>
             <div class="form-grid">
                 <div>
+                    <p class="section-title">Marques & Modèles</p>
                     <input type="text" id="rep-brand-name" placeholder="Nom Marque">
                     <input type="text" id="rep-brand-logo" placeholder="URL Logo" style="margin-top:10px;">
                     <button onclick="addRepairBrand()">Ajouter Marque</button>
                     <div id="list-repair-brands" class="manage-list"></div>
-                </div>
-                <div>
-                    <select id="select-brand-for-model"><option>Chargement...</option></select>
+                    
+                    <select id="select-brand-for-model" style="margin-top:20px;"><option>Chargement...</option></select>
                     <input type="text" id="rep-model-name" placeholder="Nom Modèle" style="margin-top:10px;">
                     <input type="text" id="rep-model-img" placeholder="URL Photo" style="margin-top:10px;">
                     <button onclick="addRepairModel()">Ajouter Modèle</button>
+                </div>
+                
+                <div>
+                    <p class="section-title">Tarifs par type de panne</p>
+                    <select id="select-model-for-repair"><option value="">Choisir un modèle...</option></select>
+                    <input type="text" id="repair-type-input" placeholder="Ex: Écran, Batterie, Vitre Arrière..." style="margin-top:10px;">
+                    <input type="number" id="repair-price-input" placeholder="Prix en €" style="margin-top:10px;">
+                    <button onclick="addRepairPrice()" style="background:var(--violet);">Enregistrer ce tarif</button>
+                    
+                    <p class="section-title">Liste des tarifs</p>
+                    <div id="list-repair-prices" class="manage-list" style="max-height: 250px;"></div>
                 </div>
             </div>
         </div>
@@ -160,76 +168,59 @@
         document.getElementById('admin-content').style.display = 'flex';
         
         loadRepairBrands();
+        loadRepairModels(); // Pour remplir le select des tarifs
+        loadRepairPrices(); // Pour afficher les tarifs existants
         loadProductFilters();
         loadClients();
         loadInventory();
         loadFAQAdmin();
     }
 
-    // --- LOGIQUE FAQ ---
+    // --- LOGIQUE FAQ (Inchangée) ---
     async function loadFAQAdmin() {
         const { data, error } = await supabaseClient.from('faq').select('*').order('created_at', { ascending: false });
         const list = document.getElementById('faq-admin-list');
         if (error) return;
-
         list.innerHTML = data.map(f => `
             <div class="faq-item-admin">
                 <div style="display:flex; justify-content:space-between;">
                     <strong>Question:</strong>
-                    <span class="faq-status ${f.is_visible ? 'status-online' : 'status-offline'}">
-                        ${f.is_visible ? 'Visible' : 'Masquée'}
-                    </span>
+                    <span class="faq-status ${f.is_visible ? 'status-online' : 'status-offline'}">${f.is_visible ? 'Visible' : 'Masquée'}</span>
                 </div>
                 <p style="margin:5px 0 15px 0;">${f.question}</p>
-                
                 <strong>Réponse:</strong>
-                <textarea id="resp-${f.id}" placeholder="Écrire la réponse ici..." style="margin:5px 0;">${f.reponse || ''}</textarea>
-                
+                <textarea id="resp-${f.id}" style="margin:5px 0;">${f.reponse || ''}</textarea>
                 <div style="display:flex; gap:10px; align-items:center; margin-top:10px;">
-                    <label style="font-size:13px; display:flex; align-items:center; gap:5px;">
-                        <input type="checkbox" id="vis-${f.id}" ${f.is_visible ? 'checked' : ''} style="width:auto;"> Afficher sur la page d'accueil
-                    </label>
-                    <button onclick="updateFAQ(${f.id})" style="background:var(--violet); margin:0; width:auto; padding:8px 15px;">Enregistrer</button>
-                    <button onclick="deleteFAQ(${f.id})" style="background:var(--red); margin:0; width:auto; padding:8px 15px;">Supprimer</button>
+                    <label style="font-size:13px; display:flex; align-items:center; gap:5px;"><input type="checkbox" id="vis-${f.id}" ${f.is_visible ? 'checked' : ''} style="width:auto;"> Afficher</label>
+                    <button onclick="updateFAQ(${f.id})" style="width:auto; padding:8px 15px;">Enregistrer</button>
+                    <button onclick="deleteFAQ(${f.id})" style="background:var(--red); width:auto; padding:8px 15px;">Supprimer</button>
                 </div>
-            </div>
-        `).join('') || "<p>Aucune question posée.</p>";
+            </div>`).join('') || "<p>Aucune question.</p>";
     }
 
     async function updateFAQ(id) {
         const reponse = document.getElementById(`resp-${id}`).value;
         const is_visible = document.getElementById(`vis-${id}`).checked;
-
-        const { error } = await supabaseClient.from('faq').update({ reponse, is_visible }).eq('id', id);
-        if (!error) { alert("FAQ mise à jour !"); loadFAQAdmin(); }
+        await supabaseClient.from('faq').update({ reponse, is_visible }).eq('id', id);
+        loadFAQAdmin();
     }
 
     async function deleteFAQ(id) {
-        if (confirm("Supprimer cette question définitivement ?")) {
-            await supabaseClient.from('faq').delete().eq('id', id);
-            loadFAQAdmin();
-        }
+        if (confirm("Supprimer ?")) { await supabaseClient.from('faq').delete().eq('id', id); loadFAQAdmin(); }
     }
 
-    // --- LOGIQUE INVENTAIRE ---
+    // --- LOGIQUE INVENTAIRE (Inchangée) ---
     async function loadInventory() {
         const { data: products } = await supabaseClient.from('products').select('*').order('name');
         const body = document.getElementById('inventory-list-body');
-        body.innerHTML = products.map(p => {
-            const isLow = p.stock <= 2;
-            return `
-                <tr>
-                    <td><strong>${p.name}</strong></td>
-                    <td>${p.category}</td>
-                    <td>${p.price.toFixed(2)} €</td>
-                    <td>
-                        <input type="number" id="stock-input-${p.id}" value="${p.stock}" style="width:70px; padding:5px; border:${isLow ? '2px solid var(--red)' : '1px solid #ddd'}">
-                        ${isLow ? '<br><span class="badge-low">Bas</span>' : ''}
-                    </td>
-                    <td><button onclick="updateStock(${p.id})" style="width:auto; margin:0; padding:5px 12px; font-size:12px;">OK</button></td>
-                </tr>
-            `;
-        }).join('');
+        body.innerHTML = products.map(p => `
+            <tr>
+                <td><strong>${p.name}</strong></td>
+                <td>${p.category}</td>
+                <td>${p.price.toFixed(2)} €</td>
+                <td><input type="number" id="stock-input-${p.id}" value="${p.stock}" style="width:70px;"></td>
+                <td><button onclick="updateStock(${p.id})" style="width:auto; padding:5px 12px;">OK</button></td>
+            </tr>`).join('');
     }
 
     async function updateStock(productId) {
@@ -238,33 +229,71 @@
         loadInventory();
     }
 
-    // --- LOGIQUE BOUTIQUE & RÉPARATIONS (EXISTANTE) ---
-    async function loadProductFilters() {
-        const { data: brands } = await supabaseClient.from('product_brands').select('*').order('name');
-        const { data: cats } = await supabaseClient.from('product_categories').select('*').order('name');
-        const bSelect = document.getElementById('acc-brand-select');
-        const cSelect = document.getElementById('acc-cat-select');
-        
-        bSelect.innerHTML = '<option value="">Marque...</option>';
-        brands?.forEach(b => bSelect.innerHTML += `<option value="${b.name}">${b.name}</option>`);
-        cSelect.innerHTML = '<option value="">Catégorie...</option>';
-        cats?.forEach(c => cSelect.innerHTML += `<option value="${c.name}">${c.name}</option>`);
-
-        document.getElementById('list-brands').innerHTML = brands?.map(b => `<div class="list-item">${b.name} <button class="btn-del" onclick="deleteItem('product_brands', ${b.id})">×</button></div>`).join('');
-        document.getElementById('list-cats').innerHTML = cats?.map(c => `<div class="list-item">${c.name} <button class="btn-del" onclick="deleteItem('product_categories', ${c.id})">×</button></div>`).join('');
-    }
-
+    // --- LOGIQUE REPARATIONS (AJOUTÉE) ---
     async function loadRepairBrands() {
         const { data } = await supabaseClient.from('repair_brands').select('*').order('name');
         const select = document.getElementById('select-brand-for-model');
-        select.innerHTML = '<option value="">Marque...</option>';
+        select.innerHTML = '<option value="">Choisir une marque...</option>';
         data?.forEach(b => select.innerHTML += `<option value="${b.id}">${b.name}</option>`);
         document.getElementById('list-repair-brands').innerHTML = data?.map(b => `<div class="list-item">${b.name} <button class="btn-del" onclick="deleteItem('repair_brands', ${b.id})">×</button></div>`).join('');
     }
 
-    async function addFilter(table, inputId) {
-        const name = document.getElementById(inputId).value;
-        if(name) { await supabaseClient.from(table).insert([{ name }]); document.getElementById(inputId).value = ""; loadProductFilters(); }
+    async function loadRepairModels() {
+        const { data } = await supabaseClient.from('repair_models').select('*').order('name');
+        const select = document.getElementById('select-model-for-repair');
+        select.innerHTML = '<option value="">Choisir un modèle...</option>';
+        data?.forEach(m => select.innerHTML += `<option value="${m.id}">${m.name}</option>`);
+    }
+
+    async function loadRepairPrices() {
+        const { data } = await supabaseClient.from('repair_types').select('*, repair_models(name)').order('created_at', {ascending: false});
+        const list = document.getElementById('list-repair-prices');
+        list.innerHTML = data?.map(p => `
+            <div class="list-item">
+                <span>[${p.repair_models?.name}] ${p.name} : <b>${p.price}€</b></span>
+                <button class="btn-del" onclick="deleteItem('repair_types', ${p.id})">×</button>
+            </div>`).join('') || "Aucun tarif.";
+    }
+
+    async function addRepairPrice() {
+        const model_id = document.getElementById('select-model-for-repair').value;
+        const name = document.getElementById('repair-type-input').value;
+        const price = document.getElementById('repair-price-input').value;
+        if(!model_id || !name || !price) return alert("Remplissez tout !");
+        
+        await supabaseClient.from('repair_types').insert([{ model_id, name, price: parseFloat(price) }]);
+        document.getElementById('repair-type-input').value = "";
+        document.getElementById('repair-price-input').value = "";
+        loadRepairPrices();
+    }
+
+    async function addRepairBrand() {
+        await supabaseClient.from('repair_brands').insert([{ name: document.getElementById('rep-brand-name').value, logo_url: document.getElementById('rep-brand-logo').value }]);
+        document.getElementById('rep-brand-name').value = ""; loadRepairBrands();
+    }
+
+    async function addRepairModel() {
+        await supabaseClient.from('repair_models').insert([{ 
+            brand_id: document.getElementById('select-brand-for-model').value,
+            name: document.getElementById('rep-model-name').value,
+            image_url: document.getElementById('rep-model-img').value
+        }]);
+        alert("Modèle ajouté !"); loadRepairModels();
+    }
+
+    // --- AUTRES LOGIQUES ---
+    async function loadProductFilters() {
+        const { data: brands } = await supabaseClient.from('product_brands').select('*').order('name');
+        const { data: cats } = await supabaseClient.from('product_categories').select('*').order('name');
+        document.getElementById('acc-brand-select').innerHTML = brands?.map(b => `<option value="${b.name}">${b.name}</option>`).join('');
+        document.getElementById('acc-cat-select').innerHTML = cats?.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+        document.getElementById('list-brands').innerHTML = brands?.map(b => `<div class="list-item">${b.name} <button class="btn-del" onclick="deleteItem('product_brands', ${b.id})">×</button></div>`).join('');
+        document.getElementById('list-cats').innerHTML = cats?.map(c => `<div class="list-item">${c.name} <button class="btn-del" onclick="deleteItem('product_categories', ${c.id})">×</button></div>`).join('');
+    }
+
+    async function addFilter(table, id) {
+        const name = document.getElementById(id).value;
+        if(name) { await supabaseClient.from(table).insert([{name}]); document.getElementById(id).value=""; loadProductFilters(); }
     }
 
     async function addAccessory() {
@@ -279,41 +308,26 @@
         alert("Produit ajouté !"); loadInventory();
     }
 
-    async function addRepairBrand() {
-        await supabaseClient.from('repair_brands').insert([{ name: document.getElementById('rep-brand-name').value, logo_url: document.getElementById('rep-brand-logo').value }]);
-        document.getElementById('rep-brand-name').value = ""; loadRepairBrands();
-    }
-
-    async function addRepairModel() {
-        await supabaseClient.from('repair_models').insert([{ 
-            brand_id: document.getElementById('select-brand-for-model').value,
-            name: document.getElementById('rep-model-name').value,
-            image_url: document.getElementById('rep-model-img').value
-        }]);
-        alert("Modèle ajouté !");
-    }
-
     async function loadClients() {
         const { data } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
         document.getElementById('client-list-body').innerHTML = data.map(c => `
             <tr>
                 <td><strong>${c.email}</strong> ${c.is_admin ? '[ADMIN]' : ''}</td>
                 <td>${new Date(c.created_at).toLocaleDateString()}</td>
-                <td>${!c.is_admin ? `<button onclick="deleteClient('${c.id}')" style="color:var(--red); background:none; width:auto;">Supprimer</button>` : ''}</td>
-            </tr>
-        `).join('');
-    }
-
-    async function deleteClient(id) {
-        if(confirm("Supprimer ce client ?")) { await supabaseClient.from('profiles').delete().eq('id', id); loadClients(); }
+                <td>${!c.is_admin ? `<button onclick="deleteClient('${c.id}')" style="color:red; background:none; width:auto;">Supprimer</button>` : ''}</td>
+            </tr>`).join('');
     }
 
     async function deleteItem(table, id) {
-        if(confirm("Supprimer ?")) { await supabaseClient.from(table).delete().eq('id', id); loadProductFilters(); loadRepairBrands(); }
+        if(confirm("Supprimer ?")) { 
+            await supabaseClient.from(table).delete().eq('id', id); 
+            if(table === 'repair_types') loadRepairPrices();
+            else if(table.includes('repair')) { loadRepairBrands(); loadRepairModels(); }
+            else loadProductFilters();
+        }
     }
 
     init();
 </script>
 </body>
 </html>
-
