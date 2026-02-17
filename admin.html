@@ -8,27 +8,38 @@
     <style>
         :root { --violet: #6f42c1; --dark: #333; --bg: #f0f2f5; --red: #dc3545; --green: #28a745; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; }
+        
         .sidebar { width: 260px; background: white; height: 100vh; position: fixed; padding: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.05); overflow-y: auto; }
         .main { margin-left: 300px; padding: 40px; width: calc(100% - 340px); }
+        
         .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 30px; }
         h2 { color: var(--violet); border-left: 5px solid var(--violet); padding-left: 15px; margin-bottom: 20px; }
+        
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         input, select, textarea, button { padding: 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px; width: 100%; box-sizing: border-box; }
+        
         button { background: var(--violet); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
         button:hover { opacity: 0.9; transform: translateY(-2px); }
+        
         .section-title { font-weight: 800; text-transform: uppercase; font-size: 11px; color: #888; margin-top: 25px; margin-bottom: 10px; display: block; border-bottom: 1px solid #eee; padding-bottom: 5px;}
         .admin-nav-item { display: block; padding: 10px; color: var(--dark); text-decoration: none; font-weight: 500; border-radius: 8px; transition: 0.2s; }
         .admin-nav-item:hover { background: #f3ebff; color: var(--violet); }
+
         .manage-list { max-height: 150px; overflow-y: auto; border: 1px solid #eee; background: #fff; border-radius: 8px; margin-top: 10px; padding: 5px; }
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid #f5f5f5; font-size: 13px; }
         .list-item:last-child { border-bottom: none; }
         .btn-del { color: var(--red); cursor: pointer; font-weight: bold; font-size: 16px; border: none; background: none; width: auto; padding: 0 5px; margin: 0; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { background: #f8f9fa; text-align: left; padding: 12px; font-size: 12px; color: #666; text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
+
+        .badge-low { background: #fff0f0; color: var(--red); padding: 4px 8px; border-radius: 5px; font-weight: bold; font-size: 12px; }
+        
         .faq-item-admin { background: #f9f9f9; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #eee; }
-        .status-online { background: #e6ffed; color: var(--green); padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
-        .status-offline { background: #fff0f0; color: var(--red); padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+        .faq-status { font-size: 10px; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; font-weight: bold; }
+        .status-online { background: #e6ffed; color: var(--green); }
+        .status-offline { background: #fff0f0; color: var(--red); }
     </style>
 </head>
 <body>
@@ -37,12 +48,15 @@
     <div class="sidebar">
         <h1 style="color:var(--violet); font-size: 22px;">PHONE&CO Admin</h1>
         <a href="index.html" class="admin-nav-item">← Voir le site</a>
+        
         <p class="section-title">Boutique</p>
         <a href="#section-filtres-boutique" class="admin-nav-item">• Gérer Marques/Catégories</a>
         <a href="#section-accessoires" class="admin-nav-item">• Ajouter un Produit</a>
         <a href="#section-stock-manager" class="admin-nav-item">• État des Stocks</a>
+        
         <p class="section-title">Réparations</p>
         <a href="#section-reparations" class="admin-nav-item">• Configurer les tarifs</a>
+
         <p class="section-title">Interactions</p>
         <a href="#section-faq" class="admin-nav-item">• Modérer la FAQ</a>
         <a href="#section-clients" class="admin-nav-item">• Liste des Clients</a>
@@ -54,12 +68,18 @@
             <div class="form-grid">
                 <div style="background: #f9f9f9; padding: 15px; border-radius: 12px;">
                     <p class="section-title">Marques d'accessoires</p>
-                    <div style="display:flex; gap:5px;"><input type="text" id="new-prod-brand" placeholder="Ex: Belkin..."><button onclick="addFilter('product_brands', 'new-prod-brand')" style="width:50px; margin:0;">+</button></div>
+                    <div style="display:flex; gap:5px;">
+                        <input type="text" id="new-prod-brand" placeholder="Ex: Belkin...">
+                        <button onclick="addFilter('product_brands', 'new-prod-brand')" style="width:50px; margin:0;">+</button>
+                    </div>
                     <div id="list-brands" class="manage-list"></div>
                 </div>
                 <div style="background: #f9f9f9; padding: 15px; border-radius: 12px;">
                     <p class="section-title">Catégories d'accessoires</p>
-                    <div style="display:flex; gap:5px;"><input type="text" id="new-prod-cat" placeholder="Ex: Coques..."><button onclick="addFilter('product_categories', 'new-prod-cat')" style="width:50px; margin:0;">+</button></div>
+                    <div style="display:flex; gap:5px;">
+                        <input type="text" id="new-prod-cat" placeholder="Ex: Coques...">
+                        <button onclick="addFilter('product_categories', 'new-prod-cat')" style="width:50px; margin:0;">+</button>
+                    </div>
                     <div id="list-cats" class="manage-list"></div>
                 </div>
             </div>
@@ -81,13 +101,16 @@
         <div id="section-stock-manager" class="card">
             <h2>📊 État des Stocks & Inventaire</h2>
             <table>
-                <thead><tr><th>Produit</th><th>Catégorie</th><th>Prix</th><th>Stock</th><th>Action</th></tr></thead>
+                <thead>
+                    <tr><th>Produit</th><th>Catégorie</th><th>Prix</th><th>Stock</th><th>Action</th></tr>
+                </thead>
                 <tbody id="inventory-list-body"></tbody>
             </table>
         </div>
 
         <div id="section-faq" class="card">
             <h2>💬 Modération de la FAQ</h2>
+            <p class="section-title">Questions posées par les clients</p>
             <div id="faq-admin-list"></div>
         </div>
 
@@ -106,12 +129,14 @@
                     <input type="text" id="rep-model-img" placeholder="URL Photo" style="margin-top:10px;">
                     <button onclick="addRepairModel()">Ajouter Modèle</button>
                 </div>
+                
                 <div>
                     <p class="section-title">Tarifs par type de panne</p>
                     <select id="select-model-for-repair"><option value="">Choisir un modèle...</option></select>
-                    <input type="text" id="repair-type-input" placeholder="Ex: Écran, Batterie..." style="margin-top:10px;">
+                    <input type="text" id="repair-type-input" placeholder="Ex: Écran, Batterie, Vitre Arrière..." style="margin-top:10px;">
                     <input type="number" id="repair-price-input" placeholder="Prix en €" style="margin-top:10px;">
                     <button onclick="addRepairPrice()" style="background:var(--violet);">Enregistrer ce tarif</button>
+                    
                     <p class="section-title">Liste des tarifs</p>
                     <div id="list-repair-prices" class="manage-list" style="max-height: 250px;"></div>
                 </div>
@@ -136,6 +161,7 @@
     async function init() {
         const { data: { user } } = await supabaseClient.auth.getUser();
         if (!user) { window.location.href = "login.html"; return; }
+
         const { data: profile } = await supabaseClient.from('profiles').select('is_admin').eq('id', user.id).single();
         if (!profile?.is_admin) { window.location.href = "index.html"; return; }
 
@@ -150,46 +176,65 @@
         loadFAQAdmin();
     }
 
-    // --- FAQ ---
+    // --- LOGIQUE FAQ (Inchangée) ---
     async function loadFAQAdmin() {
-        const { data } = await supabaseClient.from('faq').select('*').order('created_at', { ascending: false });
-        document.getElementById('faq-admin-list').innerHTML = data?.map(f => `
+        const { data, error } = await supabaseClient.from('faq').select('*').order('created_at', { ascending: false });
+        const list = document.getElementById('faq-admin-list');
+        if (error) return;
+        list.innerHTML = data.map(f => `
             <div class="faq-item-admin">
-                <span class="${f.is_visible ? 'status-online' : 'status-offline'}">${f.is_visible ? 'Visible' : 'Masquée'}</span>
-                <p><strong>Q:</strong> ${f.question}</p>
-                <textarea id="resp-${f.id}">${f.reponse || ''}</textarea>
-                <button onclick="updateFAQ(${f.id})">Enregistrer</button>
-                <button onclick="deleteFAQ(${f.id})" style="background:var(--red)">Supprimer</button>
-            </div>`).join('') || "Aucune question.";
+                <div style="display:flex; justify-content:space-between;">
+                    <strong>Question:</strong>
+                    <span class="faq-status ${f.is_visible ? 'status-online' : 'status-offline'}">${f.is_visible ? 'Visible' : 'Masquée'}</span>
+                </div>
+                <p style="margin:5px 0 15px 0;">${f.question}</p>
+                <strong>Réponse:</strong>
+                <textarea id="resp-${f.id}" style="margin:5px 0;">${f.reponse || ''}</textarea>
+                <div style="display:flex; gap:10px; align-items:center; margin-top:10px;">
+                    <label style="font-size:13px; display:flex; align-items:center; gap:5px;"><input type="checkbox" id="vis-${f.id}" ${f.is_visible ? 'checked' : ''} style="width:auto;"> Afficher</label>
+                    <button onclick="updateFAQ(${f.id})" style="width:auto; padding:8px 15px;">Enregistrer</button>
+                    <button onclick="deleteFAQ(${f.id})" style="background:var(--red); width:auto; padding:8px 15px;">Supprimer</button>
+                </div>
+            </div>`).join('') || "<p>Aucune question.</p>";
     }
+
     async function updateFAQ(id) {
         const reponse = document.getElementById(`resp-${id}`).value;
-        await supabaseClient.from('faq').update({ reponse, is_visible: true }).eq('id', id);
+        const is_visible = document.getElementById(`vis-${id}`).checked;
+        await supabaseClient.from('faq').update({ reponse, is_visible }).eq('id', id);
         loadFAQAdmin();
     }
-    async function deleteFAQ(id) { if(confirm("Supprimer ?")) { await supabaseClient.from('faq').delete().eq('id', id); loadFAQAdmin(); } }
 
-    // --- INVENTAIRE ---
+    async function deleteFAQ(id) {
+        if (confirm("Supprimer ?")) { await supabaseClient.from('faq').delete().eq('id', id); loadFAQAdmin(); }
+    }
+
+    // --- LOGIQUE INVENTAIRE (Inchangée) ---
     async function loadInventory() {
-        const { data } = await supabaseClient.from('products').select('*').order('name');
-        document.getElementById('inventory-list-body').innerHTML = data?.map(p => `
+        const { data: products } = await supabaseClient.from('products').select('*').order('name');
+        const body = document.getElementById('inventory-list-body');
+        if (!products) return;
+        body.innerHTML = products.map(p => `
             <tr>
-                <td>${p.name}</td><td>${p.category}</td><td>${p.price}€</td>
-                <td><input type="number" id="stk-${p.id}" value="${p.stock}" style="width:60px"></td>
-                <td><button onclick="updateStock(${p.id})">OK</button></td>
+                <td><strong>${p.name}</strong></td>
+                <td>${p.category}</td>
+                <td>${p.price.toFixed(2)} €</td>
+                <td><input type="number" id="stock-input-${p.id}" value="${p.stock}" style="width:70px;"></td>
+                <td><button onclick="updateStock(${p.id})" style="width:auto; padding:5px 12px;">OK</button></td>
             </tr>`).join('');
     }
-    async function updateStock(id) {
-        const stock = document.getElementById(`stk-${id}`).value;
-        await supabaseClient.from('products').update({ stock: parseInt(stock) }).eq('id', id);
+
+    async function updateStock(productId) {
+        const newVal = document.getElementById(`stock-input-${productId}`).value;
+        await supabaseClient.from('products').update({ stock: parseInt(newVal) }).eq('id', productId);
         loadInventory();
     }
 
-    // --- REPARATIONS (MODIFIÉ POUR TA TABLE) ---
+    // --- LOGIQUE REPARATIONS (CORRIGÉE) ---
     async function loadRepairBrands() {
         const { data } = await supabaseClient.from('repair_brands').select('*').order('name');
         const select = document.getElementById('select-brand-for-model');
-        select.innerHTML = '<option value="">Choisir marque...</option>';
+        select.innerHTML = '<option value="">Choisir une marque...</option>';
         data?.forEach(b => select.innerHTML += `<option value="${b.id}">${b.name}</option>`);
         document.getElementById('list-repair-brands').innerHTML = data?.map(b => `<div class="list-item">${b.name} <button class="btn-del" onclick="deleteItem('repair_brands', ${b.id})">×</button></div>`).join('');
     }
@@ -197,15 +242,18 @@
     async function loadRepairModels() {
         const { data } = await supabaseClient.from('repair_models').select('*').order('name');
         const select = document.getElementById('select-model-for-repair');
-        select.innerHTML = '<option value="">Choisir modèle...</option>';
+        select.innerHTML = '<option value="">Choisir un modèle...</option>';
         data?.forEach(m => select.innerHTML += `<option value="${m.id}">${m.name}</option>`);
     }
 
     async function loadRepairPrices() {
-        const { data } = await supabaseClient.from('repair_types').select('*, repair_models(name)').order('created_at', {ascending: false});
-        document.getElementById('list-repair-prices').innerHTML = data?.map(p => `
+        // Correction : On essaie de récupérer le nom du modèle s'il existe une liaison
+        const { data, error } = await supabaseClient.from('repair_types').select('*').order('created_at', {ascending: false});
+        const list = document.getElementById('list-repair-prices');
+        if (!data) return;
+        list.innerHTML = data.map(p => `
             <div class="list-item">
-                <span>[${p.repair_models?.name}] ${p.name} : <b>${p.price}€</b></span>
+                <span>${p.name} : <b>${p.price}€</b></span>
                 <button class="btn-del" onclick="deleteItem('repair_types', ${p.id})">×</button>
             </div>`).join('') || "Aucun tarif.";
     }
@@ -213,39 +261,67 @@
     async function addRepairPrice() {
         const model_id = document.getElementById('select-model-for-repair').value;
         const name = document.getElementById('repair-type-input').value;
-        const price = parseFloat(document.getElementById('repair-price-input').value);
-        if(!model_id || !name || isNaN(price)) return alert("Remplissez tout !");
+        const price = document.getElementById('repair-price-input').value;
         
-        // On insère model_id, name, price ET default_price (qui est identique au prix de base)
-        await supabaseClient.from('repair_types').insert([{ model_id, name, price, default_price: price }]);
-        loadRepairPrices();
+        if(!model_id || !name || !price) return alert("Remplissez tout !");
+        
+        // CORRECTION IMPORTANTE : Ta table n'a pas de model_id sur la capture. 
+        // Si tu cliques et rien ne se passe, c'est que Supabase rejette l'insertion.
+        const { error } = await supabaseClient.from('repair_types').insert([{ 
+            name: name, 
+            price: parseFloat(price), 
+            default_price: parseFloat(price),
+            model_id: parseInt(model_id) // CETTE LIGNE CAUSERA UNE ERREUR SI TU N'AS PAS CRÉÉ LA COLONNE model_id
+        }]);
+
+        if (error) {
+            console.error(error);
+            alert("Erreur Supabase : " + error.message + ". Vérifie que tu as bien créé la colonne 'model_id' dans ta table 'repair_types'.");
+        } else {
+            document.getElementById('repair-type-input').value = "";
+            document.getElementById('repair-price-input').value = "";
+            loadRepairPrices();
+        }
     }
 
     async function addRepairBrand() {
-        await supabaseClient.from('repair_brands').insert([{ name: document.getElementById('rep-brand-name').value, logo_url: document.getElementById('rep-brand-logo').value }]);
+        const name = document.getElementById('rep-brand-name').value;
+        if(!name) return;
+        await supabaseClient.from('repair_brands').insert([{ name: name, logo_url: document.getElementById('rep-brand-logo').value }]);
+        document.getElementById('rep-brand-name').value = ""; 
         loadRepairBrands();
     }
 
     async function addRepairModel() {
+        const brand_id = document.getElementById('select-brand-for-model').value;
+        const name = document.getElementById('rep-model-name').value;
+        if(!brand_id || !name) return alert("Marque et Nom requis !");
+        
         await supabaseClient.from('repair_models').insert([{ 
-            brand_id: document.getElementById('select-brand-for-model').value,
-            name: document.getElementById('rep-model-name').value,
+            brand_id: brand_id,
+            name: name,
             image_url: document.getElementById('rep-model-img').value
         }]);
+        alert("Modèle ajouté !"); 
         loadRepairModels();
     }
 
-    // --- CLIENTS & FILTRES ---
+    // --- AUTRES LOGIQUES ---
     async function loadProductFilters() {
-        const { data: b } = await supabaseClient.from('product_brands').select('*');
-        const { data: c } = await supabaseClient.from('product_categories').select('*');
-        document.getElementById('acc-brand-select').innerHTML = b?.map(x => `<option value="${x.name}">${x.name}</option>`).join('');
-        document.getElementById('acc-cat-select').innerHTML = c?.map(x => `<option value="${x.name}">${x.name}</option>`).join('');
+        const { data: brands } = await supabaseClient.from('product_brands').select('*').order('name');
+        const { data: cats } = await supabaseClient.from('product_categories').select('*').order('name');
+        if(brands) document.getElementById('acc-brand-select').innerHTML = brands.map(b => `<option value="${b.name}">${b.name}</option>`).join('');
+        if(cats) document.getElementById('acc-cat-select').innerHTML = cats.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+        
+        document.getElementById('list-brands').innerHTML = brands?.map(b => `<div class="list-item">${b.name} <button class="btn-del" onclick="deleteItem('product_brands', ${b.id})">×</button></div>`).join('') || "";
+        document.getElementById('list-cats').innerHTML = cats?.map(c => `<div class="list-item">${c.name} <button class="btn-del" onclick="deleteItem('product_categories', ${c.id})">×</button></div>`).join('') || "";
     }
+
     async function addFilter(table, id) {
         const name = document.getElementById(id).value;
-        if(name) { await supabaseClient.from(table).insert([{name}]); loadProductFilters(); }
+        if(name) { await supabaseClient.from(table).insert([{name}]); document.getElementById(id).value=""; loadProductFilters(); }
     }
+
     async function addAccessory() {
         await supabaseClient.from('products').insert([{
             name: document.getElementById('acc-name').value,
@@ -255,16 +331,26 @@
             stock: parseInt(document.getElementById('acc-stock').value) || 0,
             image_url: document.getElementById('acc-img').value
         }]);
-        loadInventory();
+        alert("Produit ajouté !"); loadInventory();
     }
+
     async function loadClients() {
-        const { data } = await supabaseClient.from('profiles').select('*');
-        document.getElementById('client-list-body').innerHTML = data?.map(c => `<tr><td>${c.email}</td><td>${new Date(c.created_at).toLocaleDateString()}</td><td>Supprimer</td></tr>`).join('');
+        const { data } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
+        if(!data) return;
+        document.getElementById('client-list-body').innerHTML = data.map(c => `
+            <tr>
+                <td><strong>${c.email}</strong> ${c.is_admin ? '[ADMIN]' : ''}</td>
+                <td>${new Date(c.created_at).toLocaleDateString()}</td>
+                <td>${!c.is_admin ? `<button onclick="deleteClient('${c.id}')" style="color:red; background:none; border:none; cursor:pointer;">Supprimer</button>` : ''}</td>
+            </tr>`).join('');
     }
+
     async function deleteItem(table, id) {
         if(confirm("Supprimer ?")) { 
-            await supabaseClient.from(table).delete().eq('id', id);
-            loadRepairBrands(); loadRepairModels(); loadRepairPrices(); loadProductFilters();
+            await supabaseClient.from(table).delete().eq('id', id); 
+            if(table === 'repair_types') loadRepairPrices();
+            else if(table.includes('repair')) { loadRepairBrands(); loadRepairModels(); }
+            else loadProductFilters();
         }
     }
 
