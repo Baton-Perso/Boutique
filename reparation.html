@@ -131,23 +131,24 @@
         }
     }
 
-    async function selectBrand(id, name) {
-        selectedBrand = name;
-        document.getElementById('res-brand').innerText = name;
-        document.getElementById('title-models').style.display = 'block';
-        
-        const { data: models } = await supabaseClient.from('repair_models').select('*').eq('brand_id', id);
-        const grid = document.getElementById('models-grid');
-        grid.innerHTML = "";
-        models.forEach(m => {
-            grid.innerHTML += `<div class="option-card" onclick="selectModel('${m.name}')">
-                <img src="${m.image_url || 'https://via.placeholder.com/60'}">
-                <br><span>${m.name}</span>
-            </div>`;
-        });
-        // Scroll automatique
-        document.getElementById('title-models').scrollIntoView({ behavior: 'smooth' });
-    }
+    // Cette fonction doit être appelée quand on clique sur une marque
+function selectBrand(brandId, brandName) {
+    selectedBrand = brandId;
+    
+    // 1. On réinitialise les sélections suivantes
+    selectedModel = null; 
+    selectedRepairs = [];
+    
+    // 2. On met à jour l'affichage du devis
+    updateQuoteDisplay(); 
+    
+    // 3. On vide la zone des modèles et des pannes visuellement
+    document.getElementById('models-grid').innerHTML = '<p>Chargement des modèles...</p>';
+    document.getElementById('repairs-grid').innerHTML = '';
+    
+    // 4. On charge les nouveaux modèles
+    loadModels(brandId);
+}
 
     async function selectModel(name) {
         selectedModel = name;
@@ -224,6 +225,20 @@
         document.getElementById('order-btn').disabled = !ok;
     }
 
+    function updateQuoteDisplay() {
+    const modelText = document.getElementById('quote-model');
+    const totalText = document.getElementById('quote-total');
+    
+    // Si aucun modèle n'est sélectionné, on affiche un tiret
+    if (!selectedModel) {
+        modelText.innerText = "-";
+    }
+    
+    // Calcul du total (ton code actuel doit déjà le faire)
+    let total = selectedRepairs.reduce((sum, r) => sum + r.price, 0);
+    totalText.innerText = total.toFixed(2) + " €";
+}
+
     function generatePDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
@@ -251,3 +266,4 @@
 </script>
 </body>
 </html>
+
