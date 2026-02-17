@@ -16,7 +16,7 @@
         h2 { color: var(--violet); border-left: 5px solid var(--violet); padding-left: 15px; margin-bottom: 20px; }
         
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        input, select, button { padding: 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px; width: 100%; box-sizing: border-box; }
+        input, select, textarea, button { padding: 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px; width: 100%; box-sizing: border-box; }
         
         button { background: var(--violet); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
         button:hover { opacity: 0.9; transform: translateY(-2px); }
@@ -35,6 +35,12 @@
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
 
         .badge-low { background: #fff0f0; color: var(--red); padding: 4px 8px; border-radius: 5px; font-weight: bold; font-size: 12px; }
+        
+        /* Style spécial FAQ Admin */
+        .faq-item-admin { background: #f9f9f9; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #eee; }
+        .faq-status { font-size: 10px; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; font-weight: bold; }
+        .status-online { background: #e6ffed; color: var(--green); }
+        .status-offline { background: #fff0f0; color: var(--red); }
     </style>
 </head>
 <body>
@@ -52,7 +58,8 @@
         <p class="section-title">Réparations</p>
         <a href="#section-reparations" class="admin-nav-item">• Configurer les tarifs</a>
 
-        <p class="section-title">Utilisateurs</p>
+        <p class="section-title">Interactions</p>
+        <a href="#section-faq" class="admin-nav-item">• Modérer la FAQ</a>
         <a href="#section-clients" class="admin-nav-item">• Liste des Clients</a>
     </div>
 
@@ -68,7 +75,6 @@
                     </div>
                     <div id="list-brands" class="manage-list"></div>
                 </div>
-
                 <div style="background: #f9f9f9; padding: 15px; border-radius: 12px;">
                     <p class="section-title">Catégories d'accessoires</p>
                     <div style="display:flex; gap:5px;">
@@ -95,62 +101,44 @@
 
         <div id="section-stock-manager" class="card">
             <h2>📊 État des Stocks & Inventaire</h2>
-            <p class="section-title">Inventaire en temps réel</p>
-            <div style="overflow-x: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Produit</th>
-                            <th>Catégorie</th>
-                            <th>Prix</th>
-                            <th>Stock</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="inventory-list-body">
-                        </tbody>
-                </table>
-            </div>
+            <table>
+                <thead>
+                    <tr><th>Produit</th><th>Catégorie</th><th>Prix</th><th>Stock</th><th>Action</th></tr>
+                </thead>
+                <tbody id="inventory-list-body"></tbody>
+            </table>
+        </div>
+
+        <div id="section-faq" class="card">
+            <h2>💬 Modération de la FAQ</h2>
+            <p class="section-title">Questions posées par les clients</p>
+            <div id="faq-admin-list">
+                </div>
         </div>
 
         <div id="section-reparations" class="card">
             <h2>🔧 Configuration des Réparations</h2>
-            <p class="section-title">Étape 1 : Gérer les Marques de téléphones</p>
+            <p class="section-title">Marques & Modèles</p>
             <div class="form-grid">
                 <div>
-                    <input type="text" id="rep-brand-name" placeholder="Nom (Apple...)">
+                    <input type="text" id="rep-brand-name" placeholder="Nom Marque">
                     <input type="text" id="rep-brand-logo" placeholder="URL Logo" style="margin-top:10px;">
-                    <button onclick="addRepairBrand()">Ajouter la Marque</button>
+                    <button onclick="addRepairBrand()">Ajouter Marque</button>
+                    <div id="list-repair-brands" class="manage-list"></div>
                 </div>
-                <div id="list-repair-brands" class="manage-list"></div>
+                <div>
+                    <select id="select-brand-for-model"><option>Chargement...</option></select>
+                    <input type="text" id="rep-model-name" placeholder="Nom Modèle" style="margin-top:10px;">
+                    <input type="text" id="rep-model-img" placeholder="URL Photo" style="margin-top:10px;">
+                    <button onclick="addRepairModel()">Ajouter Modèle</button>
+                </div>
             </div>
-
-            <p class="section-title">Étape 2 : Ajouter un Modèle</p>
-            <div class="form-grid">
-                <select id="select-brand-for-model"><option>Chargement...</option></select>
-                <input type="text" id="rep-model-name" placeholder="iPhone 14 Pro">
-                <input type="text" id="rep-model-img" placeholder="URL Photo" style="grid-column: span 2;">
-            </div>
-            <button onclick="addRepairModel()">Ajouter le Modèle</button>
-
-            <p class="section-title">Étape 3 : Ajouter une Panne & Prix</p>
-            <div class="form-grid">
-                <input type="text" id="rep-type-name" placeholder="Type (Écran LCD...)">
-                <input type="number" step="0.01" id="rep-type-price" placeholder="Prix (€)">
-            </div>
-            <button onclick="addRepairType()">Enregistrer la Panne</button>
         </div>
 
         <div id="section-clients" class="card">
             <h2>👥 Liste des Clients inscrits</h2>
             <table>
-                <thead>
-                    <tr>
-                        <th>Email</th>
-                        <th>Date d'inscription</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
+                <thead><tr><th>Email</th><th>Date d'inscription</th><th>Actions</th></tr></thead>
                 <tbody id="client-list-body"></tbody>
             </table>
         </div>
@@ -164,23 +152,10 @@
 
     async function init() {
         const { data: { user } } = await supabaseClient.auth.getUser();
-        
-        if (!user) {
-            window.location.href = "login.html";
-            return;
-        }
+        if (!user) { window.location.href = "login.html"; return; }
 
-        const { data: profile, error: profileError } = await supabaseClient
-            .from('profiles')
-            .select('is_admin')
-            .eq('id', user.id)
-            .single();
-
-        if (profileError || !profile || !profile.is_admin) {
-            alert("Accès refusé.");
-            window.location.href = "index.html";
-            return;
-        }
+        const { data: profile } = await supabaseClient.from('profiles').select('is_admin').eq('id', user.id).single();
+        if (!profile?.is_admin) { window.location.href = "index.html"; return; }
 
         document.getElementById('admin-content').style.display = 'flex';
         
@@ -188,18 +163,58 @@
         loadProductFilters();
         loadClients();
         loadInventory();
+        loadFAQAdmin();
     }
 
-    // --- GESTION INVENTAIRE ---
-    async function loadInventory() {
-        const { data: products, error } = await supabaseClient
-            .from('products')
-            .select('*')
-            .order('name');
-
-        const body = document.getElementById('inventory-list-body');
+    // --- LOGIQUE FAQ ---
+    async function loadFAQAdmin() {
+        const { data, error } = await supabaseClient.from('faq').select('*').order('created_at', { ascending: false });
+        const list = document.getElementById('faq-admin-list');
         if (error) return;
 
+        list.innerHTML = data.map(f => `
+            <div class="faq-item-admin">
+                <div style="display:flex; justify-content:space-between;">
+                    <strong>Question:</strong>
+                    <span class="faq-status ${f.is_visible ? 'status-online' : 'status-offline'}">
+                        ${f.is_visible ? 'Visible' : 'Masquée'}
+                    </span>
+                </div>
+                <p style="margin:5px 0 15px 0;">${f.question}</p>
+                
+                <strong>Réponse:</strong>
+                <textarea id="resp-${f.id}" placeholder="Écrire la réponse ici..." style="margin:5px 0;">${f.reponse || ''}</textarea>
+                
+                <div style="display:flex; gap:10px; align-items:center; margin-top:10px;">
+                    <label style="font-size:13px; display:flex; align-items:center; gap:5px;">
+                        <input type="checkbox" id="vis-${f.id}" ${f.is_visible ? 'checked' : ''} style="width:auto;"> Afficher sur l'index
+                    </label>
+                    <button onclick="updateFAQ(${f.id})" style="background:var(--violet); margin:0; width:auto; padding:8px 15px;">Enregistrer</button>
+                    <button onclick="deleteFAQ(${f.id})" style="background:var(--red); margin:0; width:auto; padding:8px 15px;">Supprimer</button>
+                </div>
+            </div>
+        `).join('') || "<p>Aucune question posée.</p>";
+    }
+
+    async function updateFAQ(id) {
+        const reponse = document.getElementById(`resp-${id}`).value;
+        const is_visible = document.getElementById(`vis-${id}`).checked;
+
+        const { error } = await supabaseClient.from('faq').update({ reponse, is_visible }).eq('id', id);
+        if (!error) { alert("FAQ mise à jour !"); loadFAQAdmin(); }
+    }
+
+    async function deleteFAQ(id) {
+        if (confirm("Supprimer cette question définitivement ?")) {
+            await supabaseClient.from('faq').delete().eq('id', id);
+            loadFAQAdmin();
+        }
+    }
+
+    // --- LOGIQUE INVENTAIRE ---
+    async function loadInventory() {
+        const { data: products } = await supabaseClient.from('products').select('*').order('name');
+        const body = document.getElementById('inventory-list-body');
         body.innerHTML = products.map(p => {
             const isLow = p.stock <= 2;
             return `
@@ -208,102 +223,52 @@
                     <td>${p.category}</td>
                     <td>${p.price.toFixed(2)} €</td>
                     <td>
-                        <input type="number" id="stock-input-${p.id}" value="${p.stock}" 
-                               style="width:70px; padding:5px; border:${isLow ? '2px solid var(--red)' : '1px solid #ddd'}">
+                        <input type="number" id="stock-input-${p.id}" value="${p.stock}" style="width:70px; padding:5px; border:${isLow ? '2px solid var(--red)' : '1px solid #ddd'}">
                         ${isLow ? '<br><span class="badge-low">Bas</span>' : ''}
                     </td>
-                    <td>
-                        <button onclick="updateStock(${p.id})" style="width:auto; margin:0; padding:5px 12px; font-size:12px;">OK</button>
-                    </td>
+                    <td><button onclick="updateStock(${p.id})" style="width:auto; margin:0; padding:5px 12px; font-size:12px;">OK</button></td>
                 </tr>
             `;
-        }).join('') || `<tr><td colspan="5">Aucun produit.</td></tr>`;
+        }).join('');
     }
 
     async function updateStock(productId) {
         const newVal = document.getElementById(`stock-input-${productId}`).value;
-        const { error } = await supabaseClient
-            .from('products')
-            .update({ stock: parseInt(newVal) })
-            .eq('id', productId);
-
-        if (error) alert(error.message);
-        else loadInventory();
+        await supabaseClient.from('products').update({ stock: parseInt(newVal) }).eq('id', productId);
+        loadInventory();
     }
 
-    // --- LOGIQUE CLIENTS ---
-    async function loadClients() {
-        const { data, error } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
-        const body = document.getElementById('client-list-body');
-        if (error) return;
-
-        body.innerHTML = data.map(c => `
-            <tr>
-                <td><strong>${c.email}</strong> ${c.is_admin ? '<span style="color:var(--violet); font-size:10px;">[ADMIN]</span>' : ''}</td>
-                <td>${new Date(c.created_at).toLocaleDateString('fr-FR')}</td>
-                <td>
-                    ${!c.is_admin ? `<button onclick="deleteClient('${c.id}')" style="background:none; color:var(--red); width:auto; margin:0; padding:5px;">Supprimer</button>` : ''}
-                </td>
-            </tr>
-        `).join('') || `<tr><td colspan="3">Aucun client trouvé.</td></tr>`;
-    }
-
-    async function deleteClient(id) {
-        if(confirm("Supprimer ce profil client ?")){
-            const { error } = await supabaseClient.from('profiles').delete().eq('id', id);
-            if(!error) loadClients();
-        }
-    }
-
-    // --- LOGIQUE BOUTIQUE & RÉPARATIONS ---
+    // --- LOGIQUE BOUTIQUE & RÉPARATIONS (EXISTANTE) ---
     async function loadProductFilters() {
         const { data: brands } = await supabaseClient.from('product_brands').select('*').order('name');
         const { data: cats } = await supabaseClient.from('product_categories').select('*').order('name');
         const bSelect = document.getElementById('acc-brand-select');
         const cSelect = document.getElementById('acc-cat-select');
-        const bList = document.getElementById('list-brands');
-        const cList = document.getElementById('list-cats');
-
+        
         bSelect.innerHTML = '<option value="">Marque...</option>';
         brands?.forEach(b => bSelect.innerHTML += `<option value="${b.name}">${b.name}</option>`);
         cSelect.innerHTML = '<option value="">Catégorie...</option>';
         cats?.forEach(c => cSelect.innerHTML += `<option value="${c.name}">${c.name}</option>`);
 
-        bList.innerHTML = brands?.map(b => `<div class="list-item">${b.name} <button class="btn-del" onclick="deleteItem('product_brands', ${b.id})">×</button></div>`).join('');
-        cList.innerHTML = cats?.map(c => `<div class="list-item">${c.name} <button class="btn-del" onclick="deleteItem('product_categories', ${c.id})">×</button></div>`).join('');
+        document.getElementById('list-brands').innerHTML = brands?.map(b => `<div class="list-item">${b.name} <button class="btn-del" onclick="deleteItem('product_brands', ${b.id})">×</button></div>`).join('');
+        document.getElementById('list-cats').innerHTML = cats?.map(c => `<div class="list-item">${c.name} <button class="btn-del" onclick="deleteItem('product_categories', ${c.id})">×</button></div>`).join('');
     }
 
     async function loadRepairBrands() {
         const { data } = await supabaseClient.from('repair_brands').select('*').order('name');
         const select = document.getElementById('select-brand-for-model');
-        const list = document.getElementById('list-repair-brands');
         select.innerHTML = '<option value="">Marque...</option>';
         data?.forEach(b => select.innerHTML += `<option value="${b.id}">${b.name}</option>`);
-        list.innerHTML = data?.map(b => `<div class="list-item">${b.name} <button class="btn-del" onclick="deleteItem('repair_brands', ${b.id})">×</button></div>`).join('');
+        document.getElementById('list-repair-brands').innerHTML = data?.map(b => `<div class="list-item">${b.name} <button class="btn-del" onclick="deleteItem('repair_brands', ${b.id})">×</button></div>`).join('');
     }
 
     async function addFilter(table, inputId) {
         const name = document.getElementById(inputId).value;
-        if(!name) return;
-        const { error } = await supabaseClient.from(table).insert([{ name }]);
-        if (!error) { document.getElementById(inputId).value = ""; loadProductFilters(); }
-    }
-
-    async function addRepairBrand() {
-        const name = document.getElementById('rep-brand-name').value;
-        const logo = document.getElementById('rep-brand-logo').value;
-        const { error } = await supabaseClient.from('repair_brands').insert([{ name, logo_url: logo }]);
-        if (!error) { document.getElementById('rep-brand-name').value = ""; loadRepairBrands(); }
-    }
-
-    async function deleteItem(table, id) {
-        if (!confirm("Supprimer cet élément ?")) return;
-        const { error } = await supabaseClient.from(table).delete().eq('id', id);
-        if (error) alert("Erreur : Liaison existante."); else { loadProductFilters(); loadRepairBrands(); }
+        if(name) { await supabaseClient.from(table).insert([{ name }]); document.getElementById(inputId).value = ""; loadProductFilters(); }
     }
 
     async function addAccessory() {
-        const { error } = await supabaseClient.from('products').insert([{
+        await supabaseClient.from('products').insert([{
             name: document.getElementById('acc-name').value,
             brand: document.getElementById('acc-brand-select').value,
             price: parseFloat(document.getElementById('acc-price').value),
@@ -311,28 +276,40 @@
             stock: parseInt(document.getElementById('acc-stock').value) || 0,
             image_url: document.getElementById('acc-img').value
         }]);
-        if (error) alert(error.message); 
-        else { 
-            alert("Produit ajouté !"); 
-            loadInventory(); // On rafraîchit l'inventaire
-        }
+        alert("Produit ajouté !"); loadInventory();
+    }
+
+    async function addRepairBrand() {
+        await supabaseClient.from('repair_brands').insert([{ name: document.getElementById('rep-brand-name').value, logo_url: document.getElementById('rep-brand-logo').value }]);
+        document.getElementById('rep-brand-name').value = ""; loadRepairBrands();
     }
 
     async function addRepairModel() {
-        const { error } = await supabaseClient.from('repair_models').insert([{ 
+        await supabaseClient.from('repair_models').insert([{ 
             brand_id: document.getElementById('select-brand-for-model').value,
             name: document.getElementById('rep-model-name').value,
             image_url: document.getElementById('rep-model-img').value
         }]);
-        if (!error) alert("Modèle ajouté !");
+        alert("Modèle ajouté !");
     }
 
-    async function addRepairType() {
-        const { error } = await supabaseClient.from('repair_types').insert([{ 
-            name: document.getElementById('rep-type-name').value,
-            price: parseFloat(document.getElementById('rep-type-price').value)
-        }]);
-        if (!error) alert("Panne enregistrée !");
+    async function loadClients() {
+        const { data } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
+        document.getElementById('client-list-body').innerHTML = data.map(c => `
+            <tr>
+                <td><strong>${c.email}</strong> ${c.is_admin ? '[ADMIN]' : ''}</td>
+                <td>${new Date(c.created_at).toLocaleDateString()}</td>
+                <td>${!c.is_admin ? `<button onclick="deleteClient('${c.id}')" style="color:var(--red); background:none; width:auto;">Supprimer</button>` : ''}</td>
+            </tr>
+        `).join('');
+    }
+
+    async function deleteClient(id) {
+        if(confirm("Supprimer ce client ?")) { await supabaseClient.from('profiles').delete().eq('id', id); loadClients(); }
+    }
+
+    async function deleteItem(table, id) {
+        if(confirm("Supprimer ?")) { await supabaseClient.from(table).delete().eq('id', id); loadProductFilters(); loadRepairBrands(); }
     }
 
     init();
