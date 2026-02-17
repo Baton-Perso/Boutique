@@ -103,6 +103,15 @@
             transition: 0.3s;
         }
         .btn-contact:hover { opacity: 0.9; transform: scale(1.05); }
+
+        /* --- NOUVEAUX STYLES FAQ --- */
+        .faq-container { margin-top: 50px; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.03); }
+        .faq-item { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+        .faq-question { font-weight: bold; color: var(--violet); font-size: 16px; margin-bottom: 5px; }
+        .faq-answer { color: #555; padding-left: 20px; border-left: 3px solid #eee; }
+        .faq-form { margin-top: 30px; padding: 20px; background: #fdfbff; border-radius: 15px; border: 1px solid #f0eaff; }
+        .faq-form textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 10px; font-family: inherit; box-sizing: border-box; }
+        .btn-faq { background: var(--violet); color: white; border: none; padding: 12px 25px; border-radius: 10px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -140,6 +149,20 @@
                 <div class="shop-image-container">
                     <img src="https://lh3.googleusercontent.com/p/AF1QipO6ycLG_Xnj1e1ATqXwqMQpVvW7hluemMf-w4Tj=s680-w680-h510-rw" alt="Boutique PHONE&CO">
                 </div>
+            </div>
+        </section>
+
+        <section class="faq-container">
+            <h2>💬 Questions Fréquentes</h2>
+            <div id="faq-display">
+                <p style="color:#888;">Chargement de la FAQ...</p>
+            </div>
+
+            <div class="faq-form">
+                <h3>Une question ?</h3>
+                <p style="font-size: 13px; color: #666; margin-bottom: 10px;">Posez votre question ici, l'administrateur y répondra prochainement.</p>
+                <textarea id="user-question" rows="3" placeholder="Votre question..."></textarea>
+                <button class="btn-faq" onclick="sendQuestion()">Envoyer ma question</button>
             </div>
         </section>
     </main>
@@ -198,10 +221,44 @@
 
         async function logout() { await supabaseClient.auth.signOut(); window.location.reload(); }
 
+        /* --- NOUVELLES FONCTIONS FAQ --- */
+        async function loadFAQ() {
+            const { data, error } = await supabaseClient
+                .from('faq')
+                .select('*')
+                .eq('is_visible', true)
+                .order('created_at', { ascending: false });
+
+            const container = document.getElementById('faq-display');
+            if (error || !data || data.length === 0) {
+                container.innerHTML = "<p style='color:#888;'>Pas encore de questions publiées.</p>";
+                return;
+            }
+
+            container.innerHTML = data.map(f => `
+                <div class="faq-item">
+                    <div class="faq-question">Q: ${f.question}</div>
+                    <div class="faq-answer">R: ${f.reponse || "Réponse en cours de rédaction..."}</div>
+                </div>
+            `).join('');
+        }
+
+        async function sendQuestion() {
+            const q = document.getElementById('user-question').value;
+            if(!q) return alert("Veuillez écrire une question.");
+
+            const { error } = await supabaseClient.from('faq').insert([{ question: q }]);
+            if(!error) {
+                alert("Question envoyée ! Elle sera visible après validation par l'admin.");
+                document.getElementById('user-question').value = "";
+            } else {
+                alert("Erreur lors de l'envoi.");
+            }
+        }
+
         checkUser();
         loadStars();
+        loadFAQ(); // Lancement de la FAQ au chargement
     </script>
 </body>
 </html>
-
-
