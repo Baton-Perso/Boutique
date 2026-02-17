@@ -34,8 +34,7 @@
         th { background: #f8f9fa; text-align: left; padding: 12px; font-size: 12px; color: #666; text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
 
-        /* Style pour masquer le contenu avant vérification admin */
-        #admin-content { display: none; }
+        .badge-low { background: #fff0f0; color: var(--red); padding: 4px 8px; border-radius: 5px; font-weight: bold; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -48,6 +47,7 @@
         <p class="section-title">Boutique</p>
         <a href="#section-filtres-boutique" class="admin-nav-item">• Gérer Marques/Catégories</a>
         <a href="#section-accessoires" class="admin-nav-item">• Ajouter un Produit</a>
+        <a href="#section-stock-manager" class="admin-nav-item">• État des Stocks</a>
         
         <p class="section-title">Réparations</p>
         <a href="#section-reparations" class="admin-nav-item">• Configurer les tarifs</a>
@@ -87,10 +87,30 @@
                 <select id="acc-brand-select"><option value="">Chargement...</option></select>
                 <select id="acc-cat-select"><option value="">Chargement...</option></select>
                 <input type="number" step="0.01" id="acc-price" placeholder="Prix (€)">
-                <input type="number" id="acc-stock" placeholder="Stock">
+                <input type="number" id="acc-stock" placeholder="Stock Initial">
                 <input type="text" id="acc-img" placeholder="URL Photo" style="grid-column: span 2;">
             </div>
             <button onclick="addAccessory()" style="background:var(--green);">Enregistrer en boutique</button>
+        </div>
+
+        <div id="section-stock-manager" class="card">
+            <h2>📊 État des Stocks & Inventaire</h2>
+            <p class="section-title">Inventaire en temps réel</p>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Produit</th>
+                            <th>Catégorie</th>
+                            <th>Prix</th>
+                            <th>Stock</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-list-body">
+                        </tbody>
+                </table>
+            </div>
         </div>
 
         <div id="section-reparations" class="card">
@@ -143,11 +163,10 @@
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
     async function init() {
-        // --- VÉRIFICATION SÉCURISÉE DE L'ADMIN ---
         const { data: { user } } = await supabaseClient.auth.getUser();
         
         if (!user) {
-            window.location.href = "login.html"; // Rediriger si non connecté
+            window.location.href = "login.html";
             return;
         }
 
@@ -158,17 +177,58 @@
             .single();
 
         if (profileError || !profile || !profile.is_admin) {
-            alert("Accès refusé : Vous n'avez pas les droits administrateur.");
+            alert("Accès refusé.");
             window.location.href = "index.html";
             return;
         }
 
-        // Si on arrive ici, l'utilisateur est admin
         document.getElementById('admin-content').style.display = 'flex';
         
         loadRepairBrands();
         loadProductFilters();
         loadClients();
+        loadInventory();
+    }
+
+    // --- GESTION INVENTAIRE ---
+    async function loadInventory() {
+        const { data: products, error } = await supabaseClient
+            .from('products')
+            .select('*')
+            .order('name');
+
+        const body = document.getElementById('inventory-list-body');
+        if (error) return;
+
+        body.innerHTML = products.map(p => {
+            const isLow = p.stock <= 2;
+            return `
+                <tr>
+                    <td><strong>${p.name}</strong></td>
+                    <td>${p.category}</td>
+                    <td>${p.price.toFixed(2)} €</td>
+                    <td>
+                        <input type="number" id="stock-input-${p.id}" value="${p.stock}" 
+                               style="width:70px; padding:5px; border:${isLow ? '2px solid var(--red)' : '1px solid #ddd'}">
+                        ${isLow ? '<br><span class="badge-low">Bas</span>' : ''}
+                    </td>
+                    <td>
+                        <button onclick="updateStock(${p.id})" style="width:auto; margin:0; padding:5px 12px; font-size:12px;">OK</button>
+                    </td>
+                </tr>
+            `;
+        }).join('') || `<tr><td colspan="5">Aucun produit.</td></tr>`;
+    }
+
+    async function updateStock(productId) {
+        const newVal = document.getElementById(`stock-input-${productId}`).value;
+        const { error } = await supabaseClient
+            .from('products')
+            .update({ stock: parseInt(newVal) })
+            .eq('id', productId);
+
+        if (error) alert(error.message);
+        else loadInventory();
     }
 
     // --- LOGIQUE CLIENTS ---
@@ -195,7 +255,7 @@
         }
     }
 
-    // --- LOGIQUE BOUTIQUE & RÉPARATIONS (Inchangée mais intégrée) ---
+    // --- LOGIQUE BOUTIQUE & RÉPARATIONS ---
     async function loadProductFilters() {
         const { data: brands } = await supabaseClient.from('product_brands').select('*').order('name');
         const { data: cats } = await supabaseClient.from('product_categories').select('*').order('name');
@@ -204,9 +264,9 @@
         const bList = document.getElementById('list-brands');
         const cList = document.getElementById('list-cats');
 
-        bSelect.innerHTML = '<option value="">Choisir la marque...</option>';
+        bSelect.innerHTML = '<option value="">Marque...</option>';
         brands?.forEach(b => bSelect.innerHTML += `<option value="${b.name}">${b.name}</option>`);
-        cSelect.innerHTML = '<option value="">Choisir la catégorie...</option>';
+        cSelect.innerHTML = '<option value="">Catégorie...</option>';
         cats?.forEach(c => cSelect.innerHTML += `<option value="${c.name}">${c.name}</option>`);
 
         bList.innerHTML = brands?.map(b => `<div class="list-item">${b.name} <button class="btn-del" onclick="deleteItem('product_brands', ${b.id})">×</button></div>`).join('');
@@ -217,7 +277,7 @@
         const { data } = await supabaseClient.from('repair_brands').select('*').order('name');
         const select = document.getElementById('select-brand-for-model');
         const list = document.getElementById('list-repair-brands');
-        select.innerHTML = '<option value="">Choisir la marque...</option>';
+        select.innerHTML = '<option value="">Marque...</option>';
         data?.forEach(b => select.innerHTML += `<option value="${b.id}">${b.name}</option>`);
         list.innerHTML = data?.map(b => `<div class="list-item">${b.name} <button class="btn-del" onclick="deleteItem('repair_brands', ${b.id})">×</button></div>`).join('');
     }
@@ -251,7 +311,11 @@
             stock: parseInt(document.getElementById('acc-stock').value) || 0,
             image_url: document.getElementById('acc-img').value
         }]);
-        if (error) alert(error.message); else { alert("Produit ajouté !"); loadProductFilters(); }
+        if (error) alert(error.message); 
+        else { 
+            alert("Produit ajouté !"); 
+            loadInventory(); // On rafraîchit l'inventaire
+        }
     }
 
     async function addRepairModel() {
