@@ -160,15 +160,24 @@
             `;
             
             if (user) {
-                if (user.email === "bap10official@gmail.com") {
-                    html += `<a href="admin.html" class="btn-admin">Console Admin</a>`;
-                }
-                html += `<a href="#" onclick="logout()">Déconnexion</a>`;
-            } else {
-                html += `<a href="login.html">Connexion</a>`;
+            // --- NOUVELLE VÉRIFICATION SÉCURISÉE ---
+            // On va chercher si l'utilisateur est admin dans la table profiles
+            const { data: profile } = await supabaseClient
+                .from('profiles')
+                .select('is_admin')
+                .eq('id', user.id)
+                .single();
+
+            if (profile && profile.is_admin) {
+                html += `<a href="admin.html" class="btn-admin">Console Admin</a>`;
             }
-            menu.innerHTML = html;
+            
+            html += `<a href="#" onclick="logout()">Déconnexion</a>`;
+        } else {
+            html += `<a href="login.html">Connexion</a>`;
         }
+        menu.innerHTML = html;
+    }
 
         async function loadStars() {
             const { data: products, error } = await supabaseClient.from('products').select('*').limit(4);
@@ -194,4 +203,5 @@
     </script>
 </body>
 </html>
+
 
