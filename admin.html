@@ -187,7 +187,7 @@
                 
                 <div style="display:flex; gap:10px; align-items:center; margin-top:10px;">
                     <label style="font-size:13px; display:flex; align-items:center; gap:5px;">
-                        <input type="checkbox" id="vis-${f.id}" ${f.is_visible ? 'checked' : ''} style="width:auto;"> Afficher sur l'index
+                        <input type="checkbox" id="vis-${f.id}" ${f.is_visible ? 'checked' : ''} style="width:auto;"> Afficher sur la page d'accueil
                     </label>
                     <button onclick="updateFAQ(${f.id})" style="background:var(--violet); margin:0; width:auto; padding:8px 15px;">Enregistrer</button>
                     <button onclick="deleteFAQ(${f.id})" style="background:var(--red); margin:0; width:auto; padding:8px 15px;">Supprimer</button>
@@ -316,3 +316,4 @@
 </script>
 </body>
 </html>
+
